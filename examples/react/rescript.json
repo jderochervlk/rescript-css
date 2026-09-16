@@ -1,0 +1,19 @@
+{
+  "name": "example-react",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "dependencies": ["@rescript/react", "@jvlk/rescript-css"],
+  "jsx": {
+    "version": 4,
+    "mode": "automatic"
+  },
+  "package-specs": {
+    "module": "esmodule",
+    "in-source": true
+  },
+  "suffix": ".res.js"
+}

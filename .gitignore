@@ -1,0 +1,7 @@
+node_modules/
+dist/
+lib/
+*.res.js
+!examples/**/*.res.js
+examples/**/*.css
+coverage/

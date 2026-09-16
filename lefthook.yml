@@ -1,0 +1,9 @@
+pre-commit:
+  parallel: false
+  commands:
+    format:
+      run: pnpm format
+    rescript:
+      run: pnpm rescript
+    tsc:
+      run: pnpm tsc

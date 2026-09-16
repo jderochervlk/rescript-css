@@ -1,0 +1,30 @@
+{
+  "name": "@jvlk/rescript-css",
+  "version": "0.1.0",
+  "files": [
+    "dist",
+    "rescript.json",
+    "src"
+  ],
+  "type": "module",
+  "exports": {
+    "./vite": {
+      "types": "./dist/vite-plugin.d.ts",
+      "import": "./dist/vite.js"
+    },
+    "./src/*": "./src/*"
+  },
+  "scripts": {
+    "build": "rescript build && vite build && tsc --emitDeclarationOnly --project tsconfig.json",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
+  },
+  "dependencies": {
+    "@rescript/runtime": "^12.0.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  },
+  "peerDependencies": {
+    "vite": "^7.0.0"
+  }
+}

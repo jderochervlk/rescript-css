@@ -1,0 +1,16 @@
+{
+  "name": "example-basic",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rescript build && vite build",
+    "rescript:build": "rescript build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@jvlk/rescript-css": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

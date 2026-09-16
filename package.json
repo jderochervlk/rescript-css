@@ -1,0 +1,33 @@
+{
+  "name": "rescript-css-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @jvlk/rescript-css run build",
+    "build:basic": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-basic run build",
+    "build:react": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-react run build",
+    "dev": "pnpm run dev:basic",
+    "dev:basic": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-basic run rescript:build && pnpm --filter example-basic run dev",
+    "dev:react": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-react run rescript:build && pnpm --filter example-react run dev",
+    "format": "oxfmt .",
+    "lint": "oxlint",
+    "prepare": "lefthook install",
+    "rescript": "pnpm --filter @jvlk/rescript-css exec rescript build && pnpm --filter example-basic exec rescript build && pnpm --filter example-react exec rescript build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "tsc": "pnpm --filter @jvlk/rescript-css exec tsc --noEmit --project tsconfig.json",
+    "typecheck": "pnpm --filter @jvlk/rescript-css run typecheck && vitest --run --typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "lefthook": "^2.1.12",
+    "oxfmt": "^0.24.0",
+    "oxlint": "^1.0.0",
+    "rescript": "^12.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^7.0.0",
+    "vitest": "^4.0.0"
+  }
+}
