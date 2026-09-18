@@ -97,8 +97,11 @@ test('identifies a compiled ReScript module that creates styles', () => {
   const matcher = stylesheetMatcher('.res.js');
   const source =
     "import * as Css$RescriptCss from '@jvlk/rescript-css/src/Css.res.js';\nconst button = Css$RescriptCss.style({});";
+  const classSource =
+    "import * as Css$RescriptCss from '@jvlk/rescript-css/src/Css.res.js';\nconst box = Css$RescriptCss.$$class({});";
 
   expect(matcher.isStylesheetModule('/project/Component.res.js', source)).toBe(true);
+  expect(matcher.isStylesheetModule('/project/Component.res.js', classSource)).toBe(true);
   expect(matcher.isStylesheetModule('/project/Component.res.js', 'const button = style({});')).toBe(
     false,
   );
@@ -286,6 +289,36 @@ test('combines collected style rules into one stylesheet', () => {
     }),
   ).toBe(
     ':root {\n  --rc_brand: teal;\n}\n\n.rc_button_0 {\n  color: white;\n}\n\n.rc_button_1 {\n  display: flex;\n}\n',
+  );
+});
+
+test('emits and inlines a class with a nested heading style', async () => {
+  const pluginRoot = fileURLToPath(
+    new URL('./__fixtures__/configured-project/vite-root', import.meta.url),
+  );
+  const compiledModulePath = fileURLToPath(
+    new URL('./__fixtures__/cascade.res.mjs', import.meta.url),
+  );
+  const cssFilePath = fileURLToPath(new URL('./__fixtures__/cascade.css', import.meta.url));
+  const plugin = await configurePlugin(pluginRoot);
+  const source = `import * as Css from '@jvlk/rescript-css/src/Css.res.mjs';
+const badge = Css.style({vars: [], color: "navy"});
+const box = Css.$$class({
+  vars: [],
+  background: "white",
+  h1: Css.style({vars: [], color: "teal"})
+});
+export {badge, box};`;
+
+  const result = await transform(plugin, source, compiledModulePath);
+  const css = await readFile(cssFilePath, 'utf8');
+
+  expect(result).toMatchObject({ code: expect.stringContaining('const badge = "rc_fixture_0";') });
+  expect(result).toMatchObject({ code: expect.stringContaining('const box = "rc_fixture_1";') });
+  expect(result).toMatchObject({ code: expect.not.stringContaining('Css.$$class') });
+  expect(result).toMatchObject({ code: expect.not.stringContaining('Css.style') });
+  expect(css).toBe(
+    '.rc_fixture_0 {\n  color: navy;\n}\n\n.rc_fixture_1 {\n  background: white;\n}\n\n.rc_fixture_1 h1 {\n  color: teal;\n}\n',
   );
 });
 

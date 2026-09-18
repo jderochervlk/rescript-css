@@ -93,6 +93,39 @@ let alternate = Css.style({
 The generated `Vars.res.js` imports `Vars.css`. Vite includes that stylesheet once even when
 many modules consume the same variables.
 
+## Nested styles
+
+Use `Css.class` when a class owns styles for a nested element. Nested `Css.style` calls are
+folded into the parent class rather than exposed as separate class names:
+
+```rescript
+module Styles = {
+  let box = Css.class({
+    background: Vars.surface,
+    padding: Vars.spaceMd,
+    h1: Css.style({
+      color: Vars.brand,
+    }),
+  })
+}
+```
+
+Apply only the parent class:
+
+```rescript
+<article className=Styles.box>
+  <h1> {React.string("Nested heading")} </h1>
+</article>
+```
+
+The nested rule shares the parent's hashed class in generated CSS:
+
+```css
+.rc_abc123_0 h1 {
+  color: var(--rc_def456);
+}
+```
+
 Run `pnpm dev:basic` or `pnpm dev:react` to compile and serve a focused example.
 
 ## Workspace

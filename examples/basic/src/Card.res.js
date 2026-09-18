@@ -6,7 +6,7 @@ import "./Vars.res.js";
 
 let className = "rc_1x0uhsv_0";
 
-let html = `<article class="` + className + `">Scoped variable overrides</article>`;
+let html = `<article class="` + className + `"><h1>Scoped variable overrides</h1></article>`;
 
 export {
   className,

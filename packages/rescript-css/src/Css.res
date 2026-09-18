@@ -12,6 +12,7 @@ type css = {
   border?: string,
   color?: string,
   padding?: string,
+  h1?: string,
 }
 
 type definition = Runtime.definition
@@ -30,7 +31,7 @@ let displayValue = mode =>
   }
 
 let style = (css: css) => {
-  let {?vars, ?display, ?background, ?border, ?color, ?padding} = css
+  let {?vars, ?display, ?background, ?border, ?color, ?padding, ?h1} = css
 
   let vars = switch vars {
   | Some(value) => value
@@ -42,6 +43,11 @@ let style = (css: css) => {
   | None => None
   }
 
+  let nested = switch h1 {
+  | Some(className) => [("h1", className)]
+  | None => []
+  }
+
   register({
     vars,
     display,
@@ -49,5 +55,8 @@ let style = (css: css) => {
     border,
     color,
     padding,
+    nested,
   })
 }
+
+let class = style

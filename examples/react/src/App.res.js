@@ -13,8 +13,7 @@ function App(props) {
   return JsxRuntime.jsxs("main", {
     children: [
       JsxRuntime.jsx("h1", {
-        children: headingText,
-        className: "rc_107y9ht_1"
+        children: headingText
       }),
       JsxRuntime.jsx(Button.make, {}),
       JsxRuntime.jsx(Card.make, {})

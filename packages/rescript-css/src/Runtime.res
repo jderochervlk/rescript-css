@@ -23,7 +23,10 @@ type definition = {
   border: option<string>,
   color: option<string>,
   padding: option<string>,
+  nested: array<(string, string)>,
 }
+
+@send external replaceAll: (string, string, string) => string = "replaceAll"
 
 @send external toStringWithRadix: (float, ~radix: int) => string = "toString"
 
@@ -59,7 +62,6 @@ module CollectorStore = {
 
   let write = collector => {
     let _ = set(globalThis, key, collector)
-    ()
   }
 
   let decode = value => isCollector(value) ? Some(collectorFromUnknown(value)) : None
@@ -98,9 +100,10 @@ let propertyNameForReference = reference => {
 }
 
 let declarationsFor = definition => {
-  let variableDeclarations = definition.vars->Array.map(((reference, value)) =>
-    `  ${reference->propertyNameForReference}: ${value};`
-  )
+  let variableDeclarations =
+    definition.vars->Array.map(((reference, value)) =>
+      `  ${reference->propertyNameForReference}: ${value};`
+    )
   let propertyDeclarations = [
     ("display", definition.display),
     ("background", definition.background),
@@ -119,6 +122,23 @@ let declarationsFor = definition => {
 
 let stylesheetFor = (className, definition) =>
   `.${className} {\n${definition->declarationsFor->Array.join("\n")}\n}\n`
+
+let isNestedStyle = (definition, style) =>
+  switch definition.nested->Array.find(((_, className)) => className === style.className) {
+  | Some(_) => true
+  | None => false
+  }
+
+let nestedStylesheetFor = (className, selector, style) =>
+  style.cssText->replaceAll(`.${style.className}`, `.${className} ${selector}`)
+
+let nestedStylesheetsFor = (className, definition, styles) =>
+  definition.nested->Array.filterMap(((selector, nestedClassName)) =>
+    switch styles->Array.find(style => style.className === nestedClassName) {
+    | Some(style) => Some(nestedStylesheetFor(className, selector, style))
+    | None => None
+    }
+  )
 
 let variableName = (scope, index) => `--rc_${`${scope}:var:${index->Int.toString}`->hashScope}`
 
@@ -143,17 +163,14 @@ let rootStylesheetFor = variables =>
   switch variables {
   | [] => ""
   | variables =>
-    let declarations = variables->Array.map(variable =>
-      `  ${variable.propertyName}: ${variable.initialValue};`
-    )
+    let declarations =
+      variables->Array.map(variable => `  ${variable.propertyName}: ${variable.initialValue};`)
     `:root {\n${declarations->Array.join("\n")}\n}\n`
   }
 
 let registerVars = references => {
   let collector = currentCollector()
-  let variables = references->Array.filterMap(reference =>
-    collector->registeredVariable(reference)
-  )
+  let variables = references->Array.filterMap(reference => collector->registeredVariable(reference))
   let rootCssText = variables->rootStylesheetFor
   let updatedCollector = {
     ...collector,
@@ -165,11 +182,14 @@ let registerVars = references => {
 
 let style = definition => {
   let collector = currentCollector()
-  let className = `rc_${collector.scope->hashScope}_${collector.styles->Array.length->Int.toString}`
-  let collectedStyle = {className, cssText: stylesheetFor(className, definition)}
+  let remainingStyles = collector.styles->Array.filter(style => !isNestedStyle(definition, style))
+  let className = `rc_${collector.scope->hashScope}_${remainingStyles->Array.length->Int.toString}`
+  let nestedStylesheets = nestedStylesheetsFor(className, definition, collector.styles)
+  let stylesheets = [stylesheetFor(className, definition)]->Array.concat(nestedStylesheets)
+  let collectedStyle = {className, cssText: stylesheets->Array.join("\n")}
   let updatedCollector = {
     ...collector,
-    styles: collector.styles->Array.concat([collectedStyle]),
+    styles: remainingStyles->Array.concat([collectedStyle]),
   }
 
   updatedCollector->CollectorStore.write

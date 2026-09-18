@@ -5,6 +5,7 @@ type definition = {
   border: option<string>,
   color: option<string>,
   padding: option<string>,
+  nested: array<(string, string)>,
 }
 
 let var: string => string

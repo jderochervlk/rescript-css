@@ -90,7 +90,7 @@ export type ReScriptConfigFailure = Readonly<{
 }>;
 
 const callsStylesheetApi = (source: string, moduleBinding: string): boolean =>
-  ['style', '$$var', 'registerVars'].some((method) =>
+  ['style', '$$class', '$$var', 'registerVars'].some((method) =>
     source.includes(`${moduleBinding}.${method}(`),
   );
 
@@ -723,7 +723,10 @@ const inlineStylesheetValues = (
   moduleBinding: string,
   stylesheet: CollectedStylesheet,
 ): InlinedStyleClassNames | undefined => {
-  const styleDeclarations = declarationsForCall(source, moduleBinding, 'style');
+  const styleDeclarations = [
+    ...declarationsForCall(source, moduleBinding, 'style'),
+    ...declarationsForCall(source, moduleBinding, '$$class'),
+  ].toSorted((left, right) => left.styleCallStart - right.styleCallStart);
   const variableDeclarations = declarationsForCall(source, moduleBinding, '$$var');
   const styleReplacements = styleReplacementsFor(styleDeclarations, stylesheet.styles);
   const variableReplacements = variableReplacementsFor(variableDeclarations, stylesheet.variables);
