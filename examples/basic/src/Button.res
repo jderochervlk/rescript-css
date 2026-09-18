@@ -1,9 +1,9 @@
 let className = Css.style({
   display: Css.InlineFlex,
-  background: "#0f766e",
+  background: Vars.brand,
   border: "0",
-  color: "white",
-  padding: "0.75rem 1rem",
+  color: Vars.onBrand,
+  padding: Vars.spaceMd,
 })
 
-let html = `<button class="${className}">Typed CSS</button>`
+let html = `<button class="${className}">Shared variables</button>`

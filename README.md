@@ -44,6 +44,55 @@ let buttonClassName = Styles.button
 
 The plugin emits `Component.css` and adds it to Vite's module graph automatically.
 
+## CSS variables
+
+Define shared variables in a registry module and register their initial values on `:root`:
+
+```rescript
+// Vars.res
+let brand = Css.var("#0f766e")
+let onBrand = Css.var("#ffffff")
+let spaceMd = Css.var("1rem")
+
+let _ = Css.registerVars([brand, onBrand, spaceMd])
+```
+
+The ReScript and JavaScript exports retain their source names. Generated CSS uses scoped hashes:
+
+```css
+:root {
+  --rc_16lsq83: #0f766e;
+  --rc_1se5ehu: #ffffff;
+  --rc_w2uaph: 1rem;
+}
+```
+
+Variable references can be consumed directly from any stylesheet module:
+
+```rescript
+let button = Css.style({
+  background: Vars.brand,
+  color: Vars.onBrand,
+  padding: Vars.spaceMd,
+})
+```
+
+Override variables within any style scope through the `vars` field:
+
+```rescript
+let alternate = Css.style({
+  vars: [
+    (Vars.brand, "#2dd4bf"),
+    (Vars.onBrand, "#042f2e"),
+  ],
+  background: Vars.brand,
+  color: Vars.onBrand,
+})
+```
+
+The generated `Vars.res.js` imports `Vars.css`. Vite includes that stylesheet once even when
+many modules consume the same variables.
+
 Run `pnpm dev:basic` or `pnpm dev:react` to compile and serve a focused example.
 
 ## Workspace

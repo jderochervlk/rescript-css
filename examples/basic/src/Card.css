@@ -1,0 +1,8 @@
+.rc_1x0uhsv_0 {
+  --rc_ytpt3h: #ecfeff;
+  --rc_mszmw5: #164e63;
+  background: var(--rc_ytpt3h);
+  border: 1px solid currentColor;
+  color: var(--rc_mszmw5);
+  padding: var(--rc_w2uaph);
+}

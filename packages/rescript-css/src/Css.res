@@ -6,6 +6,7 @@ type displayMode =
   | InlineFlex
 
 type css = {
+  vars?: array<(string, string)>,
   display?: displayMode,
   background?: string,
   border?: string,
@@ -15,6 +16,8 @@ type css = {
 
 type definition = Runtime.definition
 
+let var: string => string = Runtime.var
+let registerVars: array<string> => unit = Runtime.registerVars
 let register: definition => string = Runtime.style
 
 let displayValue = mode =>
@@ -27,7 +30,12 @@ let displayValue = mode =>
   }
 
 let style = (css: css) => {
-  let {?display, ?background, ?border, ?color, ?padding} = css
+  let {?vars, ?display, ?background, ?border, ?color, ?padding} = css
+
+  let vars = switch vars {
+  | Some(value) => value
+  | None => []
+  }
 
   let display = switch display {
   | Some(value) => Some(displayValue(value))
@@ -35,6 +43,7 @@ let style = (css: css) => {
   }
 
   register({
+    vars,
     display,
     background,
     border,

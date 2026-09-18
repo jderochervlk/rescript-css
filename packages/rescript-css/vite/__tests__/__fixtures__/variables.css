@@ -1,0 +1,8 @@
+:root {
+  --rc_1emvc5k: #0f766e;
+}
+
+.rc_fixture_0 {
+  --rc_1emvc5k: #2dd4bf;
+  color: var(--rc_1emvc5k);
+}

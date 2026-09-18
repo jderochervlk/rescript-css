@@ -1,4 +1,5 @@
 type definition = {
+  vars: array<(string, string)>,
   display: option<string>,
   background: option<string>,
   border: option<string>,
@@ -6,4 +7,6 @@ type definition = {
   padding: option<string>,
 }
 
+let var: string => string
+let registerVars: array<string> => unit
 let style: definition => string
