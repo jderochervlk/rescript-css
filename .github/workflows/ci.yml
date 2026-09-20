@@ -62,6 +62,9 @@ jobs:
       - name: Build package and examples
         run: pnpm build:all
 
+      - name: Verify packed package
+        run: pnpm package:check
+
       - name: Check generated artifacts
         run: |
           changes="$(git status --porcelain)"

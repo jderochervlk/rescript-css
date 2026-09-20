@@ -12,6 +12,7 @@ writes neighboring `*.css` assets, and imports those assets into Vite.
 - [Values and properties](docs/values-and-properties.md)
 - [CSS variables](docs/variables.md)
 - [Nesting and conditional rules](docs/nesting.md)
+- [Releasing](docs/releasing.md)
 
 ## Quick start
 

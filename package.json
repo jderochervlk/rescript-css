@@ -15,6 +15,7 @@
     "dev:xote": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-xote run rescript:build && pnpm --filter example-xote run dev",
     "format": "oxfmt --ignore-path=.oxfmtignore .",
     "format:check": "oxfmt --ignore-path=.oxfmtignore --check . && rescript format -c packages/rescript-css/src/*.res packages/rescript-css/src/*.resi examples/basic/src/*.res examples/react/src/*.res examples/xote/src/*.res",
+    "package:check": "pnpm run build && node scripts/verify-package.mjs",
     "prepare": "lefthook install",
     "rescript": "pnpm --filter @jvlk/rescript-css exec rescript build && pnpm --filter example-basic exec rescript build && pnpm --filter example-react exec rescript build && pnpm --filter example-xote exec rescript build",
     "test": "vitest run",

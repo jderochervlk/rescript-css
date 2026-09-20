@@ -1,6 +1,24 @@
 {
   "name": "@jvlk/rescript-css",
   "version": "0.1.0",
+  "description": "Typed, statically extracted CSS for ReScript.",
+  "keywords": [
+    "css",
+    "css-in-js",
+    "rescript",
+    "type-safe",
+    "vite"
+  ],
+  "homepage": "https://github.com/jderochervlk/rescript-css#readme",
+  "bugs": {
+    "url": "https://github.com/jderochervlk/rescript-css/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jderochervlk/rescript-css.git",
+    "directory": "packages/rescript-css"
+  },
   "files": [
     "dist",
     "rescript.json",
@@ -14,8 +32,14 @@
     },
     "./src/*": "./src/*"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "rescript build && vite build && tsc --emitDeclarationOnly --project tsconfig.json",
+    "prepack": "pnpm run build",
+    "prepublishOnly": "pnpm --dir ../.. format:check && pnpm --dir ../.. typecheck && pnpm --dir ../.. test",
     "typecheck": "tsc --noEmit --project tsconfig.json"
   },
   "dependencies": {
@@ -26,5 +50,8 @@
   },
   "peerDependencies": {
     "vite": "^7.0.0"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
   }
 }

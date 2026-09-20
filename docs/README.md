@@ -12,6 +12,7 @@ names.
 - [CSS variables](variables.md): declaring, registering, consuming, and overriding shared tokens.
 - [Nesting and conditional rules](nesting.md): descendants, states, arbitrary selectors, media
   queries, feature queries, and container queries.
+- [Releasing](releasing.md): package verification, the first manual publish, and automated releases.
 
 ## API At A Glance
 
