@@ -43,6 +43,13 @@ jobs:
       - name: Install trusted-publishing npm CLI
         run: npm install --global npm@${NPM_VERSION}
 
+      - name: Verify trusted-publishing environment
+        shell: bash
+        run: |
+          test "$(npm --version)" = "${NPM_VERSION}"
+          test -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}"
+          test -n "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}"
+
       - name: Verify release tag
         id: package
         shell: bash
@@ -85,7 +92,7 @@ jobs:
       - name: Publish package
         if: steps.registry.outputs.published == 'false'
         working-directory: packages/rescript-css
-        run: npm publish --access public
+        run: npm publish --access public --loglevel verbose
 
       - name: Report existing version
         if: steps.registry.outputs.published == 'true'
