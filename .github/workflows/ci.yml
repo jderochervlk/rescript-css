@@ -32,7 +32,6 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
           runtime: node@${{ env.NODE_VERSION }}
           cache: true
-          require-lockfile: true
 
       - name: Check formatting
         run: pnpm format:check
@@ -57,7 +56,6 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
           runtime: node@${{ env.NODE_VERSION }}
           cache: true
-          require-lockfile: true
 
       - name: Build package and examples
         run: pnpm build:all
