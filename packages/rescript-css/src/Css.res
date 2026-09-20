@@ -5,13 +5,26 @@ type displayMode =
   | InlineBlock
   | InlineFlex
 
+type length =
+  | Rem(float)
+  | Em(float)
+  | Px(int)
+  | Percent(float)
+  | Auto
+  | Zero
+  | Var(string)
+  | Raw(string)
+
 type css = {
   vars?: array<(string, string)>,
   display?: displayMode,
   background?: string,
   border?: string,
   color?: string,
-  padding?: string,
+  width?: length,
+  padding?: length,
+  margin?: length,
+  fontSize?: length,
   h1?: string,
 }
 
@@ -30,8 +43,37 @@ let displayValue = mode =>
   | InlineFlex => "inline-flex"
   }
 
+let lengthValue = length =>
+  switch length {
+  | Rem(value) => `${value->Float.toString}rem`
+  | Em(value) => `${value->Float.toString}em`
+  | Px(value) => `${value->Int.toString}px`
+  | Percent(value) => `${value->Float.toString}%`
+  | Auto => "auto"
+  | Zero => "0"
+  | Var(value)
+  | Raw(value) => value
+  }
+
+let optionalLengthValue = value =>
+  switch value {
+  | Some(value) => Some(lengthValue(value))
+  | None => None
+  }
+
 let style = (css: css) => {
-  let {?vars, ?display, ?background, ?border, ?color, ?padding, ?h1} = css
+  let {
+    ?vars,
+    ?display,
+    ?background,
+    ?border,
+    ?color,
+    ?width,
+    ?padding,
+    ?margin,
+    ?fontSize,
+    ?h1,
+  } = css
 
   let vars = switch vars {
   | Some(value) => value
@@ -54,7 +96,10 @@ let style = (css: css) => {
     background,
     border,
     color,
-    padding,
+    width: optionalLengthValue(width),
+    padding: optionalLengthValue(padding),
+    margin: optionalLengthValue(margin),
+    fontSize: optionalLengthValue(fontSize),
     nested,
   })
 }

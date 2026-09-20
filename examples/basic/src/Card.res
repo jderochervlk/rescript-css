@@ -3,9 +3,12 @@ let className = Css.class({
   background: Vars.surface,
   border: "1px solid currentColor",
   color: Vars.text,
-  padding: Vars.spaceMd,
+  width: Percent(100.0),
+  padding: Var(Vars.spaceMd),
+  margin: Auto,
   h1: Css.style({
     color: Vars.brand,
+    fontSize: Em(1.75),
   }),
 })
 

@@ -73,7 +73,7 @@ Variable references can be consumed directly from any stylesheet module:
 let button = Css.style({
   background: Vars.brand,
   color: Vars.onBrand,
-  padding: Vars.spaceMd,
+  padding: Var(Vars.spaceMd),
 })
 ```
 
@@ -87,6 +87,31 @@ let alternate = Css.style({
   ],
   background: Vars.brand,
   color: Vars.onBrand,
+  padding: Rem(1.0),
+})
+```
+
+## Typed units
+
+Length-valued properties use variants. The surrounding `Css.style` call gives ReScript enough
+context to resolve their constructors without a `Css.` prefix:
+
+```rescript
+let box = Css.style({
+  width: Rem(24.0),
+  padding: Px(16),
+  margin: Auto,
+  fontSize: Em(1.125),
+})
+```
+
+Use `Percent`, `Zero`, and `Raw` for percentages, unitless zero, and an explicit escape hatch.
+CSS variable references use `Var` in length-valued properties:
+
+```rescript
+let card = Css.style({
+  width: Percent(100.0),
+  padding: Var(Vars.spaceMd),
 })
 ```
 
@@ -102,7 +127,7 @@ folded into the parent class rather than exposed as separate class names:
 module Styles = {
   let box = Css.class({
     background: Vars.surface,
-    padding: Vars.spaceMd,
+    padding: Var(Vars.spaceMd),
     h1: Css.style({
       color: Vars.brand,
     }),

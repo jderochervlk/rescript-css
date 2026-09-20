@@ -2,9 +2,12 @@ module Styles = {
   let page = Css.class({
     background: Vars.surface,
     color: Vars.text,
-    padding: "2rem",
+    width: Percent(100.0),
+    padding: Rem(2.0),
+    margin: Auto,
     h1: Css.style({
       color: Vars.brand,
+      fontSize: Em(1.75),
     }),
   })
 }

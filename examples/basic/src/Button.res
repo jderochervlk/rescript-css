@@ -3,7 +3,7 @@ let className = Css.style({
   background: Vars.brand,
   border: "0",
   color: Vars.onBrand,
-  padding: Vars.spaceMd,
+  padding: Var(Vars.spaceMd),
 })
 
 let html = `<button class="${className}">Shared variables</button>`

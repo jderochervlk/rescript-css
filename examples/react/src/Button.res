@@ -4,7 +4,7 @@ module Styles = {
     border: "0",
     color: Vars.onBrand,
     display: Css.InlineFlex,
-    padding: Vars.spaceMd,
+    padding: Var(Vars.spaceMd),
   })
 }
 

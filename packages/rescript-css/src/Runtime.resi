@@ -4,7 +4,10 @@ type definition = {
   background: option<string>,
   border: option<string>,
   color: option<string>,
+  width: option<string>,
   padding: option<string>,
+  margin: option<string>,
+  fontSize: option<string>,
   nested: array<(string, string)>,
 }
 

@@ -22,7 +22,10 @@ type definition = {
   background: option<string>,
   border: option<string>,
   color: option<string>,
+  width: option<string>,
   padding: option<string>,
+  margin: option<string>,
+  fontSize: option<string>,
   nested: array<(string, string)>,
 }
 
@@ -109,7 +112,10 @@ let declarationsFor = definition => {
     ("background", definition.background),
     ("border", definition.border),
     ("color", definition.color),
+    ("width", definition.width),
     ("padding", definition.padding),
+    ("margin", definition.margin),
+    ("font-size", definition.fontSize),
   ]->Array.filterMap(((property, value)) =>
     switch value {
     | Some(value) => Some(`  ${property}: ${value};`)

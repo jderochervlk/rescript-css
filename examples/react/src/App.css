@@ -1,9 +1,12 @@
 .rc_107y9ht_0 {
   background: var(--rc_yc142e);
   color: var(--rc_4pjwda);
+  width: 100%;
   padding: 2rem;
+  margin: auto;
 }
 
 .rc_107y9ht_0 h1 {
   color: var(--rc_d0rg60);
+  font-size: 1.75em;
 }

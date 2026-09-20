@@ -4,9 +4,12 @@
   background: var(--rc_ytpt3h);
   border: 1px solid currentColor;
   color: var(--rc_mszmw5);
+  width: 100%;
   padding: var(--rc_w2uaph);
+  margin: auto;
 }
 
 .rc_1x0uhsv_0 h1 {
   color: var(--rc_16lsq83);
+  font-size: 1.75em;
 }
