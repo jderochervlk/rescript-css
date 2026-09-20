@@ -46,9 +46,20 @@ jobs:
       - name: Verify trusted-publishing environment
         shell: bash
         run: |
-          test "$(npm --version)" = "${NPM_VERSION}"
-          test -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}"
-          test -n "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}"
+          actual_npm_version="$(npm --version)"
+          printf 'npm version: %s\n' "${actual_npm_version}"
+          if [ "${actual_npm_version}" != "${NPM_VERSION}" ]; then
+            printf '::error::Expected npm %s but found %s.\n' "${NPM_VERSION}" "${actual_npm_version}"
+            exit 1
+          fi
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            printf '::error::ACTIONS_ID_TOKEN_REQUEST_URL is unavailable.\n'
+            exit 1
+          fi
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
+            printf '::error::ACTIONS_ID_TOKEN_REQUEST_TOKEN is unavailable.\n'
+            exit 1
+          fi
 
       - name: Verify release tag
         id: package
