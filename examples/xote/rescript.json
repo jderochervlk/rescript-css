@@ -1,0 +1,21 @@
+{
+  "name": "example-xote",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "dependencies": ["@jvlk/rescript-css", "xote"],
+  "package-specs": {
+    "module": "esmodule",
+    "in-source": true
+  },
+  "suffix": ".res.mjs",
+  "jsx": {
+    "version": 4,
+    "module": "XoteJSX"
+  },
+  "compiler-flags": ["-open Xote"],
+  "ppx-flags": ["xote/ppx/ppx"]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "example-xote",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rescript build && vite build",
+    "rescript:build": "rescript build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@jvlk/rescript-css": "workspace:*",
+    "xote": "^7.1.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+let brand = Css.var("#087f73")
+let onBrand = Css.var("#ffffff")
+let canvas = Css.var("#e9f3f1")
+let surface = Css.var("#ffffff")
+let text = Css.var("#172321")
+let muted = Css.var("#526460")
+let accent = Css.var("#e85d4a")
+let border = Css.var("#b8ccc8")
+let spaceMd = Css.var("1rem")
+
+let _ = Css.registerVars([brand, onBrand, canvas, surface, text, muted, accent, border, spaceMd])

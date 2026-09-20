@@ -65,6 +65,19 @@ importers:
         specifier: ^7.0.0
         version: 7.3.6(@types/node@24.13.4)
 
+  examples/xote:
+    dependencies:
+      '@jvlk/rescript-css':
+        specifier: workspace:*
+        version: link:../../packages/rescript-css
+      xote:
+        specifier: ^7.1.0
+        version: 7.1.0
+    devDependencies:
+      vite:
+        specifier: ^7.0.0
+        version: 7.3.6(@types/node@24.13.4)
+
   packages/rescript-css:
     dependencies:
       '@rescript/runtime':
@@ -847,6 +860,9 @@ packages:
     resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
     engines: {node: '>=0.10.0'}
 
+  rescript-signals@3.1.2:
+    resolution: {integrity: sha512-5x/tleMgqVtWgFDyIsu96TW76ghbVgujhNQRtRgrOqBbdDVgkd12mSK7hXEbIXB6cU2sTICr4elbYVdzTsmXeg==}
+
   rescript@12.3.1:
     resolution: {integrity: sha512-Q4y0SQ7EUShiX1ymEG5iOCGzbVSOh7CCLEnQUkq19FX2i64eQ2uEGeMCKFl0AsL7TcK5pS+66QTSP6jf6LSgaA==}
     engines: {node: '>=20.11.0'}
@@ -994,6 +1010,9 @@ packages:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
+
+  xote@7.1.0:
+    resolution: {integrity: sha512-I3883uBaCksVxGf9Fo7VogNkyRvK9bF2kIqL9MjnVWYaR3uHIsoCLRekviydDZv+UZUrCwN72yPzkSUgtutxLA==}
 
 snapshots:
 
@@ -1541,6 +1560,8 @@ snapshots:
 
   react@19.3.0: {}
 
+  rescript-signals@3.1.2: {}
+
   rescript@12.3.1:
     dependencies:
       '@rescript/runtime': 12.3.1
@@ -1660,3 +1681,7 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  xote@7.1.0:
+    dependencies:
+      rescript-signals: 3.1.2

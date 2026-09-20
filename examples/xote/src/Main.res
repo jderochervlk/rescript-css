@@ -1,0 +1,1 @@
+View.mountById(<App />, "app")

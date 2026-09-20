@@ -225,12 +225,13 @@ let experimental = Css.style({
 })
 ```
 
-Run `pnpm dev:basic` or `pnpm dev:react` to compile and serve a focused example.
+Run `pnpm dev:basic`, `pnpm dev:react`, or `pnpm dev:xote` to compile and serve a focused example.
 
 ## Workspace
 
 - `packages/rescript-css`: the ReScript API, CSS collection runtime, and `@jvlk/rescript-css/vite` plugin entry point.
 - `examples/basic`: a framework-free Vite example.
 - `examples/react`: a ReScript React Vite example.
+- `examples/xote`: a reactive [Xote](https://xote.dev/) Vite example.
 
-Use `pnpm build:basic` or `pnpm build:react` for isolated production builds.
+Use `pnpm build:basic`, `pnpm build:react`, or `pnpm build:xote` for isolated production builds.

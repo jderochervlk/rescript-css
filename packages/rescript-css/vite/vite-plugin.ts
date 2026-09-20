@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import type { Plugin } from 'vite';
 
 const defaultCompiledRescriptModuleSuffix = '.res.js';
+const commonCompiledRescriptModuleSuffixes = ['.res.js', '.res.mjs'] as const;
 const emittedCssSuffix = '.css';
 const collectorSymbolName = '@jvlk/rescript-css.collector';
 const stylesModuleDeclarationPattern =
@@ -107,11 +108,19 @@ const hashValue = (value: string): string => {
   return (hash >>> 0).toString(36);
 };
 
-const cssModuleImportPatternFor = (compiledModuleSuffix: string): RegExp =>
-  new RegExp(
-    `import\\s+\\*\\s+as\\s+([A-Za-z_$][\\w$]*)\\s+from\\s+['"][^'"]*Css${escapeRegularExpression(compiledModuleSuffix)}['"];`,
+const cssModuleImportSuffixPatternFor = (compiledModuleSuffix: string): string =>
+  [...new Set([...commonCompiledRescriptModuleSuffixes, compiledModuleSuffix])]
+    .map(escapeRegularExpression)
+    .join('|');
+
+const cssModuleImportPatternFor = (compiledModuleSuffix: string): RegExp => {
+  const suffixPattern = cssModuleImportSuffixPatternFor(compiledModuleSuffix);
+
+  return new RegExp(
+    `import\\s+\\*\\s+as\\s+([A-Za-z_$][\\w$]*)\\s+from\\s+['"][^'"]*Css(?:${suffixPattern})['"];`,
     'gu',
   );
+};
 
 const cssModuleBindingFor = (source: string, cssModuleImportPattern: RegExp): string | undefined =>
   [...source.matchAll(cssModuleImportPattern)]
@@ -125,7 +134,7 @@ const cssModuleImportPatternForBinding = (
   moduleBinding: string,
 ): RegExp =>
   new RegExp(
-    `^import\\s+\\*\\s+as\\s+${escapeRegularExpression(moduleBinding)}\\s+from\\s+['"][^'"]*Css${escapeRegularExpression(compiledModuleSuffix)}['"];\\n?`,
+    `^import\\s+\\*\\s+as\\s+${escapeRegularExpression(moduleBinding)}\\s+from\\s+['"][^'"]*Css(?:${cssModuleImportSuffixPatternFor(compiledModuleSuffix)})['"];\\n?`,
     'mu',
   );
 
@@ -795,6 +804,21 @@ const prepareStylesheetModule = async (
   matcher: StylesheetMatcher,
 ): Promise<void> => {
   if (!matcher.isStylesheetModule(moduleFilePath, source)) {
+    const cssFilePath = matcher.cssFilePathFor(moduleFilePath);
+    const stylesheetImport = stylesheetImportFor(moduleFilePath, cssFilePath);
+
+    if (!source.includes(stylesheetImport)) {
+      return;
+    }
+
+    await writeFile(moduleFilePath, source.replace(stylesheetImport, ''), 'utf8');
+
+    try {
+      await import(pathToFileURL(moduleFilePath).href);
+    } finally {
+      await writeFile(moduleFilePath, source, 'utf8');
+    }
+
     return;
   }
 
@@ -839,7 +863,7 @@ const localModuleDependencies = (
   source: string,
   modulePaths: ReadonlySet<string>,
 ): readonly string[] => {
-  const importPattern = /^import(?:[\s\S]*?from\s*)?["'](\.[^"']+)["'];/gmu;
+  const importPattern = /^import\s+(?:[^;\n]*?\sfrom\s+)?["'](\.[^"']+)["'];/gmu;
   return [...source.matchAll(importPattern)].flatMap((match) => {
     const specifier = match[1];
 
