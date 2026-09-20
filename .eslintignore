@@ -1,4 +1,0 @@
-examples/**/src/*.res.js
-examples/**/src/*.res.mjs
-packages/rescript-css/src/*.res.js
-packages/rescript-css/vite/__tests__/__fixtures__/*.res.mjs
