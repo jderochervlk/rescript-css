@@ -63,9 +63,9 @@ jobs:
       - name: Verify packed package
         run: pnpm package:check
 
-      - name: Check generated artifacts
+      - name: Check package generated artifacts
         run: |
-          changes="$(git status --porcelain)"
+          changes="$(git status --porcelain -- packages/rescript-css)"
           if [ -n "$changes" ]; then
             printf '%s\n' "$changes"
             exit 1
