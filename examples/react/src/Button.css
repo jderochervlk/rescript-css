@@ -1,7 +1,24 @@
 .rc_1qr011i_0 {
   display: inline-flex;
+  padding: var(--rc_r1kdke);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  color: var(--rc_jj8xyx);
   background: var(--rc_d0rg60);
   border: 0;
-  color: var(--rc_jj8xyx);
-  padding: var(--rc_r1kdke);
+  border-radius: 6px;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rc_1qr011i_0:hover {
+  box-shadow: 0 0.25rem 0.75rem rgb(15 118 110 / 25%);
+  transform: translateY(-1px);
+}
+
+.rc_1qr011i_0:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }

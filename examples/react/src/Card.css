@@ -1,8 +1,13 @@
 .rc_19ciu9w_0 {
   --rc_yc142e: #ecfeff;
   --rc_4pjwda: #164e63;
+  display: grid;
+  max-width: 60ch;
+  padding: var(--rc_r1kdke);
+  gap: 1rem;
+  color: var(--rc_4pjwda);
+  line-height: 1.5;
   background: var(--rc_yc142e);
   border: 1px solid currentColor;
-  color: var(--rc_4pjwda);
-  padding: var(--rc_r1kdke);
+  border-radius: 8px;
 }

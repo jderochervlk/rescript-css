@@ -9,3 +9,7 @@
 .rc_fixture_1 h1 {
   color: teal;
 }
+
+.rc_fixture_1:hover {
+  opacity: 0.8;
+}

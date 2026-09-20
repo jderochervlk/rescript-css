@@ -1,13 +1,6 @@
 type definition = {
   vars: array<(string, string)>,
-  display: option<string>,
-  background: option<string>,
-  border: option<string>,
-  color: option<string>,
-  width: option<string>,
-  padding: option<string>,
-  margin: option<string>,
-  fontSize: option<string>,
+  declarations: array<(string, string)>,
   nested: array<(string, string)>,
 }
 

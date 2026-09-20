@@ -306,7 +306,8 @@ const badge = Css.style({vars: [], color: "navy"});
 const box = Css.$$class({
   vars: [],
   background: "white",
-  h1: Css.style({vars: [], color: "teal"})
+  h1: Css.style({vars: [], color: "teal"}),
+  hover: Css.style({vars: [], opacity: 0.8})
 });
 export {badge, box};`;
 
@@ -318,7 +319,7 @@ export {badge, box};`;
   expect(result).toMatchObject({ code: expect.not.stringContaining('Css.$$class') });
   expect(result).toMatchObject({ code: expect.not.stringContaining('Css.style') });
   expect(css).toBe(
-    '.rc_fixture_0 {\n  color: navy;\n}\n\n.rc_fixture_1 {\n  background: white;\n}\n\n.rc_fixture_1 h1 {\n  color: teal;\n}\n',
+    '.rc_fixture_0 {\n  color: navy;\n}\n\n.rc_fixture_1 {\n  background: white;\n}\n\n.rc_fixture_1 h1 {\n  color: teal;\n}\n\n.rc_fixture_1:hover {\n  opacity: 0.8;\n}\n',
   );
 });
 

@@ -30,7 +30,7 @@ Create styles directly in `Component.res`:
 ```rescript
 module Styles = {
   let button = Css.style({
-    display: Css.InlineFlex,
+    display: InlineFlex,
     color: "white",
   })
 }
@@ -105,6 +105,25 @@ let box = Css.style({
 })
 ```
 
+The API covers common layout, logical sizing and spacing, flexbox, grid, typography, borders,
+backgrounds, effects, animation, scrolling, tables, lists, and interaction properties. Finite CSS
+keywords use contextual variants while compound values remain strings:
+
+```rescript
+let panel = Css.style({
+  display: Grid,
+  gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
+  alignItems: Center,
+  gap: Rem(1.0),
+  overflow: Hidden,
+  borderStyle: Solid,
+  borderRadius: Px(8),
+  fontWeight: Weight(600),
+  lineHeight: Number(1.5),
+  cursor: Pointer,
+})
+```
+
 Use `Percent`, `Zero`, and `Raw` for percentages, unitless zero, and an explicit escape hatch.
 CSS variable references use `Var` in length-valued properties:
 
@@ -149,6 +168,53 @@ The nested rule shares the parent's hashed class in generated CSS:
 .rc_abc123_0 h1 {
   color: var(--rc_def456);
 }
+```
+
+Common elements, states, and pseudo-elements can be nested the same way:
+
+```rescript
+let button = Css.class({
+  cursor: Pointer,
+  hover: Css.style({
+    transform: "translateY(-1px)",
+  }),
+  focusVisible: Css.style({
+    outline: "2px solid currentColor",
+  }),
+  before: Css.style({
+    content: "\"\"",
+  }),
+})
+```
+
+Arbitrary selectors and conditional rules cover selectors and at-rules that do not have dedicated
+fields:
+
+```rescript
+let layout = Css.class({
+  selectors: [
+    ("> strong", Css.style({fontWeight: Bold})),
+    ("&[data-compact]", Css.style({padding: Rem(1.0)})),
+  ],
+  media: [
+    Css.media(
+      ~query="(width >= 48rem)",
+      Css.style({gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}),
+    ),
+  ],
+  supports: [
+    Css.supports(~condition="(container-type: inline-size)", Css.style({containerType: "inline-size"})),
+  ],
+})
+```
+
+Use `custom` as the final fallback for new or uncommon declarations. Custom declarations are
+emitted after typed fields, so they can intentionally override them:
+
+```rescript
+let experimental = Css.style({
+  custom: [("field-sizing", "content")],
+})
 ```
 
 Run `pnpm dev:basic` or `pnpm dev:react` to compile and serve a focused example.

@@ -1,15 +1,22 @@
 .rc_1x0uhsv_0 {
   --rc_ytpt3h: #ecfeff;
   --rc_mszmw5: #164e63;
+  display: grid;
+  width: 100%;
+  max-width: 60ch;
+  margin: auto;
+  padding: var(--rc_w2uaph);
+  gap: 1rem;
+  color: var(--rc_mszmw5);
+  line-height: 1.5;
   background: var(--rc_ytpt3h);
   border: 1px solid currentColor;
-  color: var(--rc_mszmw5);
-  width: 100%;
-  padding: var(--rc_w2uaph);
-  margin: auto;
+  border-radius: 8px;
 }
 
 .rc_1x0uhsv_0 h1 {
+  margin-block: 0;
   color: var(--rc_16lsq83);
   font-size: 1.75em;
+  font-weight: bold;
 }

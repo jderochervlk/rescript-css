@@ -18,14 +18,7 @@ type collector = {
 
 type definition = {
   vars: array<(string, string)>,
-  display: option<string>,
-  background: option<string>,
-  border: option<string>,
-  color: option<string>,
-  width: option<string>,
-  padding: option<string>,
-  margin: option<string>,
-  fontSize: option<string>,
+  declarations: array<(string, string)>,
   nested: array<(string, string)>,
 }
 
@@ -107,21 +100,8 @@ let declarationsFor = definition => {
     definition.vars->Array.map(((reference, value)) =>
       `  ${reference->propertyNameForReference}: ${value};`
     )
-  let propertyDeclarations = [
-    ("display", definition.display),
-    ("background", definition.background),
-    ("border", definition.border),
-    ("color", definition.color),
-    ("width", definition.width),
-    ("padding", definition.padding),
-    ("margin", definition.margin),
-    ("font-size", definition.fontSize),
-  ]->Array.filterMap(((property, value)) =>
-    switch value {
-    | Some(value) => Some(`  ${property}: ${value};`)
-    | None => None
-    }
-  )
+  let propertyDeclarations =
+    definition.declarations->Array.map(((property, value)) => `  ${property}: ${value};`)
 
   variableDeclarations->Array.concat(propertyDeclarations)
 }
@@ -135,8 +115,24 @@ let isNestedStyle = (definition, style) =>
   | None => false
   }
 
+let selectorFor = (className, selector) =>
+  selector->String.startsWith("&")
+    ? selector->replaceAll("&", `.${className}`)
+    : `.${className} ${selector}`
+
+let indentStylesheet = cssText =>
+  cssText
+  ->String.split("\n")
+  ->Array.map(line => line === "" ? line : `  ${line}`)
+  ->Array.join("\n")
+
 let nestedStylesheetFor = (className, selector, style) =>
-  style.cssText->replaceAll(`.${style.className}`, `.${className} ${selector}`)
+  if selector->String.startsWith("@") {
+    let cssText = style.cssText->replaceAll(`.${style.className}`, `.${className}`)
+    `${selector} {\n${cssText->indentStylesheet}}\n`
+  } else {
+    style.cssText->replaceAll(`.${style.className}`, selectorFor(className, selector))
+  }
 
 let nestedStylesheetsFor = (className, definition, styles) =>
   definition.nested->Array.filterMap(((selector, nestedClassName)) =>

@@ -6,5 +6,6 @@ collector.styles.push({
 });
 collector.styles.push({
   className: 'rc_fixture_1',
-  cssText: '.rc_fixture_1 {\n  background: white;\n}\n\n.rc_fixture_1 h1 {\n  color: teal;\n}\n',
+  cssText:
+    '.rc_fixture_1 {\n  background: white;\n}\n\n.rc_fixture_1 h1 {\n  color: teal;\n}\n\n.rc_fixture_1:hover {\n  opacity: 0.8;\n}\n',
 });
