@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm --filter @jvlk/rescript-css run build",
+    "build:all": "pnpm run build && pnpm --filter example-basic run build && pnpm --filter example-react run build && pnpm --filter example-xote run build",
     "build:basic": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-basic run build",
     "build:react": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-react run build",
     "build:xote": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-xote run build",
@@ -13,7 +14,8 @@
     "dev:react": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-react run rescript:build && pnpm --filter example-react run dev",
     "dev:xote": "pnpm --filter @jvlk/rescript-css run build && pnpm --filter example-xote run rescript:build && pnpm --filter example-xote run dev",
     "format": "oxfmt .",
-    "lint": "oxlint",
+    "format:check": "oxfmt --check . && rescript format -c packages/rescript-css/src/*.res packages/rescript-css/src/*.resi examples/basic/src/*.res examples/react/src/*.res examples/xote/src/*.res",
+    "lint": "oxlint --deny-warnings",
     "prepare": "lefthook install",
     "rescript": "pnpm --filter @jvlk/rescript-css exec rescript build && pnpm --filter example-basic exec rescript build && pnpm --filter example-react exec rescript build && pnpm --filter example-xote exec rescript build",
     "test": "vitest run",
@@ -31,5 +33,9 @@
     "typescript": "^5.0.0",
     "vite": "^7.0.0",
     "vitest": "^4.0.0"
-  }
+  },
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "packageManager": "pnpm@11.15.1"
 }
