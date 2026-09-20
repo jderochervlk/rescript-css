@@ -22,7 +22,18 @@ already exists and completes without publishing it again.
 
 ## Trusted Publisher Setup
 
-After the first publish, add a trusted publisher for `@jvlk/rescript-css` on npm with these values:
+After the first publish, use npm `11.15.0` or newer to add the trusted publisher:
+
+```sh
+npm install --global npm@^11.15.0
+npm trust github @jvlk/rescript-css \
+  --file publish.yml \
+  --repo jderochervlk/rescript-css \
+  --env npm \
+  --allow-publish
+```
+
+The command registers these values on npm:
 
 | Setting              | Value          |
 | -------------------- | -------------- |
