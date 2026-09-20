@@ -41,7 +41,10 @@ jobs:
           cache: false
 
       - name: Install trusted-publishing npm CLI
-        run: npm install --global npm@${NPM_VERSION}
+        shell: bash
+        run: |
+          npm install --global --prefix "${RUNNER_TEMP}/npm" npm@${NPM_VERSION}
+          printf '%s\n' "${RUNNER_TEMP}/npm/bin" >> "${GITHUB_PATH}"
 
       - name: Verify trusted-publishing environment
         shell: bash
