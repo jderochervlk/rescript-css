@@ -106,7 +106,7 @@ jobs:
       - name: Publish package
         if: steps.registry.outputs.published == 'false'
         working-directory: packages/rescript-css
-        run: npm publish --access public --loglevel verbose
+        run: npm publish --access public
 
       - name: Report existing version
         if: steps.registry.outputs.published == 'true'
