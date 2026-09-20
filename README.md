@@ -5,6 +5,14 @@ An experimental typed CSS workspace for ReScript.
 The Vite plugin finds static `Css.style` calls in compiled ReScript modules,
 writes neighboring `*.css` assets, and imports those assets into Vite.
 
+## Documentation
+
+- [Documentation overview](docs/README.md)
+- [Getting started](docs/getting-started.md)
+- [Values and properties](docs/values-and-properties.md)
+- [CSS variables](docs/variables.md)
+- [Nesting and conditional rules](docs/nesting.md)
+
 ## Quick start
 
 Install workspace dependencies and build an example:
