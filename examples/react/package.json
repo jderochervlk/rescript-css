@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rescript build && vite build",
-    "rescript:build": "rescript build",
+    "build": "pnpm run rescript:build && vite build",
+    "rescript:build": "pnpm run rescript:package && rescript clean && rescript build",
+    "rescript:package": "cd ../../packages/rescript-css && ../../node_modules/.bin/rescript clean && ../../node_modules/.bin/rescript build",
     "dev": "vite"
   },
   "dependencies": {

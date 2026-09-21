@@ -94,60 +94,28 @@ type regex
 
 module CollectorStore = {
   @val external globalThis: unknown = "globalThis"
-  @val @scope("Symbol") external symbolFor: string => Symbol.t = "for"
-  @val @scope("Reflect") external get: (unknown, Symbol.t) => unknown = "get"
-  @val @scope("Reflect") external set: (unknown, Symbol.t, 'value) => bool = "set"
-  @get external scope: Type.Classify.object => unknown = "scope"
-  @get external styles: Type.Classify.object => unknown = "styles"
-  @get external rules: Type.Classify.object => unknown = "rules"
-  @get external keyframes: Type.Classify.object => unknown = "keyframes"
-  @get external fontFaces: Type.Classify.object => unknown = "fontFaces"
-  @get external properties: Type.Classify.object => unknown = "properties"
-  @get external scopes: Type.Classify.object => unknown = "scopes"
-  @get external pages: Type.Classify.object => unknown = "pages"
-  @get external layerOrder: Type.Classify.object => unknown = "layerOrder"
-  @get external nextRuleOrder: Type.Classify.object => unknown = "nextRuleOrder"
-  @get external variables: Type.Classify.object => unknown = "variables"
-  @get external rootCssText: Type.Classify.object => unknown = "rootCssText"
+  @val @scope("Symbol") external symbolFor: string => unknown = "for"
+  @val @scope("Reflect") external get: (unknown, unknown) => unknown = "get"
+  @val @scope("Reflect") external set: (unknown, unknown, 'value) => bool = "set"
   external collectorFromUnknown: unknown => collector = "%identity"
 
   let key = symbolFor("@jvlk/rescript-css.collector")
 
-  let isCollector = value =>
-    switch Type.Classify.classify(value) {
-    | Object(candidate) =>
-      switch (
-        Type.Classify.classify(candidate->scope),
-        candidate->styles->Array.isArray,
-        candidate->rules->Array.isArray,
-        candidate->keyframes->Array.isArray,
-        candidate->fontFaces->Array.isArray,
-        candidate->properties->Array.isArray,
-        candidate->scopes->Array.isArray,
-        candidate->pages->Array.isArray,
-        candidate->layerOrder->Array.isArray,
-        Type.Classify.classify(candidate->nextRuleOrder),
-        candidate->variables->Array.isArray,
-        Type.Classify.classify(candidate->rootCssText),
-      ) {
-      | (
-          String(_),
-          true,
-          true,
-          true,
-          true,
-          true,
-          true,
-          true,
-          true,
-          Number(_),
-          true,
-          String(_),
-        ) => true
-      | _ => false
-      }
-    | _ => false
-    }
+  let isCollector: unknown => bool = %raw(`value =>
+    value !== null &&
+    typeof value === "object" &&
+    typeof value.scope === "string" &&
+    Array.isArray(value.styles) &&
+    Array.isArray(value.rules) &&
+    Array.isArray(value.keyframes) &&
+    Array.isArray(value.fontFaces) &&
+    Array.isArray(value.properties) &&
+    Array.isArray(value.scopes) &&
+    Array.isArray(value.pages) &&
+    Array.isArray(value.layerOrder) &&
+    typeof value.nextRuleOrder === "number" &&
+    Array.isArray(value.variables) &&
+    typeof value.rootCssText === "string"`)
 
   let read = () => get(globalThis, key)
 
@@ -162,10 +130,11 @@ let hashScope = scope => {
   let rec hashAt = (index, hash) =>
     index === scope->String.length
       ? hash
-      : hashAt(index + 1, Int.bitwiseXor(hash * 33, scope->String.charCodeAtUnsafe(index)))
+      : hashAt(index + 1, Compat.intBitwiseXor(hash * 33, Compat.stringCharCodeAt(scope, index)))
 
   let hash = hashAt(0, 5381)
-  let unsignedHash = hash < 0 ? Float.fromInt(hash) +. 4294967296.0 : Float.fromInt(hash)
+  let unsignedHash =
+    hash < 0 ? Compat.floatFromInt(hash) +. 4294967296.0 : Compat.floatFromInt(hash)
   unsignedHash->toStringWithRadix(~radix=36)
 }
 
@@ -198,36 +167,36 @@ let propertyNameForReference = reference => {
   let prefix = "var("
   let suffix = ")"
 
-  reference->String.startsWith(prefix) && reference->String.endsWith(suffix)
-    ? reference->String.slice(~start=prefix->String.length, ~end=-(suffix->String.length))
+  Compat.stringStartsWith(reference, prefix) && Compat.stringEndsWith(reference, suffix)
+    ? Compat.stringSlice(reference, prefix->String.length, -(suffix->String.length))
     : reference
 }
 
 let declarationsFor = definition => {
   let variableDeclarations =
-    definition.vars->Array.map(((reference, value)) =>
+    definition.vars->Compat.arrayMap(((reference, value)) =>
       `  ${reference->propertyNameForReference}: ${value};`
     )
   let propertyDeclarations =
-    definition.declarations->Array.map(((property, value)) => `  ${property}: ${value};`)
+    definition.declarations->Compat.arrayMap(((property, value)) => `  ${property}: ${value};`)
 
-  variableDeclarations->Array.concat(propertyDeclarations)
+  variableDeclarations->Compat.arrayConcat(propertyDeclarations)
 }
 
 let stylesheetFor = (selector, definition) =>
-  `${selector} {\n${definition->declarationsFor->Array.join("\n")}\n}\n`
+  `${selector} {\n${definition->declarationsFor->Compat.arrayJoin("\n")}\n}\n`
 
 let isNestedStyle = (definition, style) =>
-  switch definition.nested->Array.find(((_, className)) => className === style.className) {
+  switch definition.nested->Compat.arrayFind(((_, className)) => className === style.className) {
   | Some(_) => true
   | None => false
   }
 
 let rec selectorBranchesAt = (value, index, start, parentheses, brackets, quote, branches) => {
   if index >= value->String.length {
-    branches->Array.concat([value->String.slice(~start)->String.trim])
+    branches->Compat.arrayConcat([Compat.stringSliceToEnd(value, start)->String.trim])
   } else {
-    let code = value->String.charCodeAtUnsafe(index)
+    let code = Compat.stringCharCodeAt(value, index)
     if code === 92 {
       selectorBranchesAt(value, index + 2, start, parentheses, brackets, quote, branches)
     } else if quote !== 0 {
@@ -260,7 +229,7 @@ let rec selectorBranchesAt = (value, index, start, parentheses, brackets, quote,
           parentheses,
           brackets,
           quote,
-          branches->Array.concat([value->String.slice(~start, ~end=index)->String.trim]),
+          branches->Compat.arrayConcat([Compat.stringSlice(value, start, index)->String.trim]),
         )
       | _ => selectorBranchesAt(value, index + 1, start, parentheses, brackets, quote, branches)
       }
@@ -271,28 +240,28 @@ let rec selectorBranchesAt = (value, index, start, parentheses, brackets, quote,
 let selectorBranches = value => selectorBranchesAt(value, 0, 0, 0, 0, 0, [])
 
 let selectorForBranch = (parentSelector, selector) =>
-  selector->String.startsWith("&")
+  Compat.stringStartsWith(selector, "&")
     ? selector->replaceAll("&", parentSelector)
     : `${parentSelector} ${selector}`
 
 let selectorFor = (parentSelector, selector) =>
   parentSelector
   ->selectorBranches
-  ->Array.flatMap(parentBranch =>
+  ->Compat.arrayFlatMap(parentBranch =>
     selector
     ->selectorBranches
-    ->Array.map(selectorBranch => selectorForBranch(parentBranch, selectorBranch))
+    ->Compat.arrayMap(selectorBranch => selectorForBranch(parentBranch, selectorBranch))
   )
-  ->Array.join(", ")
+  ->Compat.arrayJoin(", ")
 
 let indentStylesheet = cssText =>
   cssText
-  ->String.split("\n")
-  ->Array.map(line => line === "" ? line : `  ${line}`)
-  ->Array.join("\n")
+  ->Compat.stringSplit("\n")
+  ->Compat.arrayMap(line => line === "" ? line : `  ${line}`)
+  ->Compat.arrayJoin("\n")
 
 let nestedStylesheetFor = (parentSelector, selector, style: collectedStyle) =>
-  if selector->String.startsWith("@") {
+  if Compat.stringStartsWith(selector, "@") {
     let cssText = style.cssText->replaceAll(`.${style.className}`, parentSelector)
     `${selector} {\n${cssText->indentStylesheet}}\n`
   } else {
@@ -300,8 +269,8 @@ let nestedStylesheetFor = (parentSelector, selector, style: collectedStyle) =>
   }
 
 let nestedStylesheetsFor = (parentSelector, definition, styles) =>
-  definition.nested->Array.filterMap(((selector, nestedClassName)) =>
-    switch styles->Array.find(style => style.className === nestedClassName) {
+  definition.nested->Compat.arrayFilterMap(((selector, nestedClassName)) =>
+    switch styles->Compat.arrayFind(style => style.className === nestedClassName) {
     | Some(style) => Some(nestedStylesheetFor(parentSelector, selector, style))
     | None => None
     }
@@ -310,12 +279,14 @@ let nestedStylesheetsFor = (parentSelector, definition, styles) =>
 let remainingCollected = (collector, definition) => {
   let nestedOrders =
     collector.styles
-    ->Array.filter(style => isNestedStyle(definition, style))
-    ->Array.map(style => style.ruleOrder)
+    ->Compat.arrayFilter(style => isNestedStyle(definition, style))
+    ->Compat.arrayMap(style => style.ruleOrder)
 
   (
-    collector.styles->Array.filter(style => !(nestedOrders->Array.includes(style.ruleOrder))),
-    collector.rules->Array.filter(rule => !(nestedOrders->Array.includes(rule.order))),
+    collector.styles->Compat.arrayFilter(style =>
+      !(nestedOrders->Compat.arrayIncludes(style.ruleOrder))
+    ),
+    collector.rules->Compat.arrayFilter(rule => !(nestedOrders->Compat.arrayIncludes(rule.order))),
   )
 }
 
@@ -329,8 +300,10 @@ let cssWideKeywords = ["initial", "inherit", "unset", "revert", "revert-layer"]
 
 let hasReservedLayerSegment = name =>
   name
-  ->String.split(".")
-  ->Array.some(segment => cssWideKeywords->Array.includes(segment->String.toLowerCase))
+  ->Compat.stringSplit(".")
+  ->Compat.arraySome(segment =>
+    cssWideKeywords->Compat.arrayIncludes(segment->Compat.stringToLowerCase)
+  )
 
 let validateLayerName = name =>
   if layerNamePattern->testRegex(name) && !hasReservedLayerSegment(name) {
@@ -349,7 +322,7 @@ let collectedLayerFor = layer =>
   } else {
     switch validateLayerName(layer) {
     | Ok(name) => {kind: "named", name}
-    | Error(message) => JsError.throwWithMessage(`@jvlk/rescript-css: ${message}`)
+    | Error(message) => Compat.throwWithMessage(`@jvlk/rescript-css: ${message}`)
     }
   }
 
@@ -362,7 +335,7 @@ let collectRule = (collector, cssText, layer) => {
 let namedLayer = name =>
   switch validateLayerName(name) {
   | Ok(name) => name
-  | Error(message) => JsError.throwWithMessage(`@jvlk/rescript-css: ${message}`)
+  | Error(message) => Compat.throwWithMessage(`@jvlk/rescript-css: ${message}`)
   }
 
 let anonymousLayer = ""
@@ -370,7 +343,7 @@ let anonymousLayer = ""
 let rec stringArraysEqualAt = (left, right, index) =>
   if index === left->Array.length {
     true
-  } else if left[index] === right[index] {
+  } else if Compat.nativeArrayGetUnsafe(left, index) === Compat.nativeArrayGetUnsafe(right, index) {
     stringArraysEqualAt(left, right, index + 1)
   } else {
     false
@@ -383,10 +356,10 @@ let rec duplicateLayerNameAt = (names, index) =>
   if index === names->Array.length {
     None
   } else {
-    switch names[index] {
+    switch Compat.arrayGet(names, index) {
     | None => None
     | Some(name) =>
-      names->Array.slice(~start=index + 1)->Array.includes(name)
+      names->Compat.arraySliceToEnd(index + 1)->Compat.arrayIncludes(name)
         ? Some(name)
         : duplicateLayerNameAt(names, index + 1)
     }
@@ -398,7 +371,7 @@ let layerOrder = names => {
   let failure = if names->Array.length === 0 {
     Some("Layer order must contain at least one named layer.")
   } else {
-    switch names->Array.findMap(name =>
+    switch names->Compat.arrayFindMap(name =>
       switch validateLayerName(name) {
       | Ok(_) => None
       | Error(message) => Some(message)
@@ -414,15 +387,15 @@ let layerOrder = names => {
   }
 
   switch failure {
-  | Some(message) => JsError.throwWithMessage(`@jvlk/rescript-css: ${message}`)
+  | Some(message) => Compat.throwWithMessage(`@jvlk/rescript-css: ${message}`)
   | None => {
       let collector = currentCollector()
       if collector.layerOrder->Array.length === 0 {
         {...collector, layerOrder: names}->CollectorStore.write
       } else if !stringArraysEqual(collector.layerOrder, names) {
-        let previous = collector.layerOrder->Array.join(", ")
-        let received = names->Array.join(", ")
-        JsError.throwWithMessage(
+        let previous = collector.layerOrder->Compat.arrayJoin(", ")
+        let received = names->Compat.arrayJoin(", ")
+        Compat.throwWithMessage(
           `@jvlk/rescript-css: Layer order conflicts with the previously declared order "${previous}". Received "${received}".`,
         )
       }
@@ -435,13 +408,13 @@ let percentageSelectorPattern = makeRegex(
 )
 
 let isKeyframePosition = position => {
-  let normalized = position->String.trim->String.toLowerCase
+  let normalized = position->String.trim->Compat.stringToLowerCase
   normalized === "from" || normalized === "to" || percentageSelectorPattern->testRegex(normalized)
 }
 
 let isKeyframeSelector = selector => {
-  let positions = selector->String.split(",")
-  positions->Array.length > 0 && positions->Array.every(isKeyframePosition)
+  let positions = selector->Compat.stringSplit(",")
+  positions->Array.length > 0 && positions->Compat.arrayEvery(isKeyframePosition)
 }
 
 let frame = (~at, definition) => {selector: at, definition}
@@ -463,30 +436,30 @@ let keyframeStylesheetFor = frame => {
   let declarations =
     frame.definition
     ->declarationsFor
-    ->Array.map(declaration => `  ${declaration}`)
-    ->Array.join("\n")
+    ->Compat.arrayMap(declaration => `  ${declaration}`)
+    ->Compat.arrayJoin("\n")
   `  ${frame.selector} {\n${declarations}\n  }`
 }
 
 let keyframesStylesheetFor = (name, frames) => {
-  let frameStylesheets = frames->Array.map(keyframeStylesheetFor)->Array.join("\n")
+  let frameStylesheets = frames->Compat.arrayMap(keyframeStylesheetFor)->Compat.arrayJoin("\n")
   `@keyframes ${name} {\n${frameStylesheets}\n}\n`
 }
 
 let keyframes = (~layer=unlayeredLayer, frames) =>
-  switch frames->Array.findMap(frameValidationFailure) {
-  | Some(message) => JsError.throwWithMessage(`@jvlk/rescript-css: ${message}`)
+  switch frames->Compat.arrayFindMap(frameValidationFailure) {
+  | Some(message) => Compat.throwWithMessage(`@jvlk/rescript-css: ${message}`)
   | None => {
       let collector = currentCollector()
       let temporaryName = `rc_kf_${collector.scope->hashScope}_${collector.keyframes
         ->Array.length
-        ->Int.toString}`
+        ->Compat.intToString}`
       let rule = collectRule(collector, keyframesStylesheetFor(temporaryName, frames), layer)
       let collectedKeyframes = {temporaryName, ruleOrder: collector.nextRuleOrder}
       let updatedCollector = {
         ...collector,
-        keyframes: collector.keyframes->Array.concat([collectedKeyframes]),
-        rules: collector.rules->Array.concat([rule]),
+        keyframes: collector.keyframes->Compat.arrayConcat([collectedKeyframes]),
+        rules: collector.rules->Compat.arrayConcat([rule]),
         nextRuleOrder: collector.nextRuleOrder + 1,
       }
 
@@ -501,8 +474,8 @@ let fontFace = (~layer=unlayeredLayer, family, cssText) => {
   let collectedFontFace = {family, ruleOrder: collector.nextRuleOrder}
   let updatedCollector = {
     ...collector,
-    fontFaces: collector.fontFaces->Array.concat([collectedFontFace]),
-    rules: collector.rules->Array.concat([rule]),
+    fontFaces: collector.fontFaces->Compat.arrayConcat([collectedFontFace]),
+    rules: collector.rules->Compat.arrayConcat([rule]),
     nextRuleOrder: collector.nextRuleOrder + 1,
   }
 
@@ -521,15 +494,15 @@ let descriptorNamePattern = makeRegex("^(?:--[A-Za-z0-9_-]+|-?[A-Za-z_][A-Za-z0-
 let isEmpty = value => value->String.trim->String.length === 0
 
 let hasUnsafeRuleBoundary = value =>
-  [";", "{", "}", "\n", "\r", "\u000C", "/*", "*/"]->Array.some(boundary =>
-    value->String.includes(boundary)
+  [";", "{", "}", "\n", "\r", "\u000C", "/*", "*/"]->Compat.arraySome(boundary =>
+    Compat.stringIncludes(value, boundary)
   )
 
 let rec selectorIsBalancedAt = (value, index, parentheses, brackets, quote) => {
   if index >= value->String.length {
     parentheses === 0 && brackets === 0 && quote === 0
   } else {
-    let code = value->String.charCodeAtUnsafe(index)
+    let code = Compat.stringCharCodeAt(value, index)
     if code === 92 {
       index + 1 < value->String.length &&
         selectorIsBalancedAt(value, index + 2, parentheses, brackets, quote)
@@ -554,7 +527,7 @@ let selectorValidationFailure = (label, selector) => {
   let normalized = selector->String.trim
   if normalized->isEmpty {
     Some(`Expected ${label} to be a non-empty selector.`)
-  } else if normalized->hasUnsafeRuleBoundary || normalized->String.startsWith("@") {
+  } else if normalized->hasUnsafeRuleBoundary || Compat.stringStartsWith(normalized, "@") {
     Some(`${label} contains an unsafe rule boundary.`)
   } else if !selectorIsBalancedAt(normalized, 0, 0, 0, 0) {
     Some(`${label} contains unbalanced brackets, parentheses, or quotes.`)
@@ -596,7 +569,7 @@ let registerProperty = (~layer=unlayeredLayer, ~name, ~syntax, ~inherits, ~initi
   }
 
   switch failure {
-  | Some(message) => JsError.throwWithMessage(`@jvlk/rescript-css: ${message}`)
+  | Some(message) => Compat.throwWithMessage(`@jvlk/rescript-css: ${message}`)
   | None => {
       let collector = currentCollector()
       let ruleOrder = collector.nextRuleOrder
@@ -610,8 +583,8 @@ let registerProperty = (~layer=unlayeredLayer, ~name, ~syntax, ~inherits, ~initi
       let rule = collectRule(collector, "", layer)
       {
         ...collector,
-        properties: collector.properties->Array.concat([property]),
-        rules: collector.rules->Array.concat([rule]),
+        properties: collector.properties->Compat.arrayConcat([property]),
+        rules: collector.rules->Compat.arrayConcat([rule]),
         nextRuleOrder: ruleOrder + 1,
       }->CollectorStore.write
     }
@@ -620,12 +593,12 @@ let registerProperty = (~layer=unlayeredLayer, ~name, ~syntax, ~inherits, ~initi
 
 let scope = (~layer=unlayeredLayer, ~root, ~limit=?, ~selector, definition) => {
   let normalizedRoot = root->String.trim
-  let normalizedLimit = limit->Option.map(String.trim)
+  let normalizedLimit = limit->Compat.optionMap(value => value->String.trim)
   let normalizedSelector = selector->String.trim
   let failure = switch selectorValidationFailure("Scope root", normalizedRoot) {
   | Some(message) => Some(message)
   | None =>
-    switch normalizedLimit->Option.flatMap(limit =>
+    switch normalizedLimit->Compat.optionFlatMap(limit =>
       selectorValidationFailure("Scope limit", limit)
     ) {
     | Some(message) => Some(message)
@@ -634,20 +607,20 @@ let scope = (~layer=unlayeredLayer, ~root, ~limit=?, ~selector, definition) => {
   }
 
   switch failure {
-  | Some(message) => JsError.throwWithMessage(`@jvlk/rescript-css: ${message}`)
+  | Some(message) => Compat.throwWithMessage(`@jvlk/rescript-css: ${message}`)
   | None => {
       let collector = currentCollector()
       let (remainingStyles, remainingRules) = remainingCollected(collector, definition)
       let nestedStylesheets = nestedStylesheetsFor(normalizedSelector, definition, collector.styles)
       let bodyCssText =
         [stylesheetFor(normalizedSelector, definition)]
-        ->Array.concat(nestedStylesheets)
-        ->Array.join("\n")
+        ->Compat.arrayConcat(nestedStylesheets)
+        ->Compat.arrayJoin("\n")
       let ruleOrder = collector.nextRuleOrder
       let scope = {
         root: normalizedRoot,
-        limit: normalizedLimit->Option.getOr(""),
-        hasLimit: normalizedLimit->Option.isSome,
+        limit: normalizedLimit->Compat.optionGetOr(""),
+        hasLimit: normalizedLimit->Compat.optionIsSome,
         selector: normalizedSelector,
         bodyCssText,
         ruleOrder,
@@ -656,8 +629,8 @@ let scope = (~layer=unlayeredLayer, ~root, ~limit=?, ~selector, definition) => {
       {
         ...collector,
         styles: remainingStyles,
-        scopes: collector.scopes->Array.concat([scope]),
-        rules: remainingRules->Array.concat([rule]),
+        scopes: collector.scopes->Compat.arrayConcat([scope]),
+        rules: remainingRules->Compat.arrayConcat([rule]),
         nextRuleOrder: ruleOrder + 1,
       }->CollectorStore.write
     }
@@ -665,43 +638,44 @@ let scope = (~layer=unlayeredLayer, ~root, ~limit=?, ~selector, definition) => {
 }
 
 let page = (~layer=unlayeredLayer, ~selector=?, descriptors) => {
-  let normalizedSelector = selector->Option.map(String.trim)
+  let normalizedSelector = selector->Compat.optionMap(value => value->String.trim)
   let normalizedDescriptors =
-    descriptors->Array.map(((name, value)) => (name->String.trim, value->String.trim))
+    descriptors->Compat.arrayMap(((name, value)) => (name->String.trim, value->String.trim))
   let failure = switch normalizedSelector {
   | Some(selector) if selector->isEmpty || !(pageSelectorPattern->testRegex(selector)) =>
     Some(
       `Invalid page selector "${selector}". Expected a page name and optional :left, :right, :first, or :blank pseudo-pages.`,
     )
   | _ =>
-    normalizedDescriptors->Array.findMap(descriptor =>
+    normalizedDescriptors->Compat.arrayFindMap(descriptor =>
       descriptorValidationFailure("@page", descriptor)
     )
   }
 
   switch failure {
-  | Some(message) => JsError.throwWithMessage(`@jvlk/rescript-css: ${message}`)
+  | Some(message) => Compat.throwWithMessage(`@jvlk/rescript-css: ${message}`)
   | None => {
       let collector = currentCollector()
       let ruleOrder = collector.nextRuleOrder
       let page = {
-        selector: normalizedSelector->Option.getOr(""),
-        hasSelector: normalizedSelector->Option.isSome,
+        selector: normalizedSelector->Compat.optionGetOr(""),
+        hasSelector: normalizedSelector->Compat.optionIsSome,
         descriptors: normalizedDescriptors,
         ruleOrder,
       }
       let rule = collectRule(collector, "", layer)
       {
         ...collector,
-        pages: collector.pages->Array.concat([page]),
-        rules: collector.rules->Array.concat([rule]),
+        pages: collector.pages->Compat.arrayConcat([page]),
+        rules: collector.rules->Compat.arrayConcat([rule]),
         nextRuleOrder: ruleOrder + 1,
       }->CollectorStore.write
     }
   }
 }
 
-let variableName = (scope, index) => `--rc_${`${scope}:var:${index->Int.toString}`->hashScope}`
+let variableName = (scope, index) =>
+  `--rc_${`${scope}:var:${Compat.intToString(index)}`->hashScope}`
 
 let var = initialValue => {
   let collector = currentCollector()
@@ -710,7 +684,7 @@ let var = initialValue => {
   let variable = {reference, propertyName, initialValue}
   let updatedCollector = {
     ...collector,
-    variables: collector.variables->Array.concat([variable]),
+    variables: collector.variables->Compat.arrayConcat([variable]),
   }
 
   updatedCollector->CollectorStore.write
@@ -718,20 +692,23 @@ let var = initialValue => {
 }
 
 let registeredVariable = (collector, reference) =>
-  collector.variables->Array.find(variable => variable.reference === reference)
+  collector.variables->Compat.arrayFind(variable => variable.reference === reference)
 
 let rootStylesheetFor = variables =>
   switch variables {
   | [] => ""
   | variables =>
     let declarations =
-      variables->Array.map(variable => `  ${variable.propertyName}: ${variable.initialValue};`)
-    `:root {\n${declarations->Array.join("\n")}\n}\n`
+      variables->Compat.arrayMap(variable =>
+        `  ${variable.propertyName}: ${variable.initialValue};`
+      )
+    `:root {\n${declarations->Compat.arrayJoin("\n")}\n}\n`
   }
 
 let registerVars = references => {
   let collector = currentCollector()
-  let variables = references->Array.filterMap(reference => collector->registeredVariable(reference))
+  let variables =
+    references->Compat.arrayFilterMap(reference => collector->registeredVariable(reference))
   let rootCssText = variables->rootStylesheetFor
   let updatedCollector = {
     ...collector,
@@ -744,17 +721,19 @@ let registerVars = references => {
 let style = (~layer=unlayeredLayer, definition) => {
   let collector = currentCollector()
   let (remainingStyles, remainingRules) = remainingCollected(collector, definition)
-  let className = `rc_${collector.scope->hashScope}_${remainingStyles->Array.length->Int.toString}`
+  let className = `rc_${collector.scope->hashScope}_${Compat.intToString(
+      remainingStyles->Array.length,
+    )}`
   let selector = `.${className}`
   let nestedStylesheets = nestedStylesheetsFor(selector, definition, collector.styles)
-  let stylesheets = [stylesheetFor(selector, definition)]->Array.concat(nestedStylesheets)
-  let cssText = stylesheets->Array.join("\n")
+  let stylesheets = [stylesheetFor(selector, definition)]->Compat.arrayConcat(nestedStylesheets)
+  let cssText = stylesheets->Compat.arrayJoin("\n")
   let collectedStyle = {className, cssText, ruleOrder: collector.nextRuleOrder}
   let rule = collectRule(collector, cssText, layer)
   let updatedCollector = {
     ...collector,
-    styles: remainingStyles->Array.concat([collectedStyle]),
-    rules: remainingRules->Array.concat([rule]),
+    styles: remainingStyles->Compat.arrayConcat([collectedStyle]),
+    rules: remainingRules->Compat.arrayConcat([rule]),
     nextRuleOrder: collector.nextRuleOrder + 1,
   }
 
@@ -766,12 +745,12 @@ let global = (~layer=unlayeredLayer, selector, definition) => {
   let collector = currentCollector()
   let (remainingStyles, remainingRules) = remainingCollected(collector, definition)
   let nestedStylesheets = nestedStylesheetsFor(selector, definition, collector.styles)
-  let stylesheets = [stylesheetFor(selector, definition)]->Array.concat(nestedStylesheets)
-  let rule = collectRule(collector, stylesheets->Array.join("\n"), layer)
+  let stylesheets = [stylesheetFor(selector, definition)]->Compat.arrayConcat(nestedStylesheets)
+  let rule = collectRule(collector, stylesheets->Compat.arrayJoin("\n"), layer)
   let updatedCollector = {
     ...collector,
     styles: remainingStyles,
-    rules: remainingRules->Array.concat([rule]),
+    rules: remainingRules->Compat.arrayConcat([rule]),
     nextRuleOrder: collector.nextRuleOrder + 1,
   }
 

@@ -30,6 +30,15 @@ let make = () =>
 The generated value is an ordinary class-name string. Pass it to `className` in React, set it on a
 DOM element with `@rescript/webapi`, or use it with any other ReScript UI framework.
 
+## Requirements
+
+- ReScript 11.1.4, 12.3.1, or 13.0.0-alpha.6
+- Vite 7 or 8
+- Node.js `>=24.12.0`
+
+The repository includes buildable consumer examples for ReScript 11.1.4, 12.3.1, and the current
+ReScript 13 preview. ReScript 13 is currently published as an alpha, not a beta.
+
 ## Install
 
 ```sh

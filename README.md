@@ -32,9 +32,12 @@ DOM element with `@rescript/webapi`, or use it with any other ReScript UI framew
 
 ## Requirements
 
-- ReScript 12
-- Vite 7
-- Node.js `^20.19.0` or `>=22.12.0`
+- ReScript 11.1.4, 12.3.1, or 13.0.0-alpha.6
+- Vite 7 or 8
+- Node.js `>=24.12.0`
+
+The repository builds consumer examples with ReScript 11.1.4, 12.3.1, and the current ReScript 13
+preview. ReScript 13 is currently published as an alpha, not a beta.
 
 ## Install
 

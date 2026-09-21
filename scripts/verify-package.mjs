@@ -16,7 +16,11 @@ const run = async (command, args, cwd) => {
     return ok(await exec(command, args, { cwd, maxBuffer: 10 * 1024 * 1024 }));
   } catch (cause) {
     const details = cause instanceof Error ? cause.message : String(cause);
-    return error(`${command} ${args.join(' ')} failed:\n${details}`);
+    const output =
+      typeof cause === 'object' && cause !== null && 'stderr' in cause
+        ? `${cause.stdout ?? ''}${cause.stderr ?? ''}`
+        : '';
+    return error(`${command} ${args.join(' ')} failed:\n${details}\n${output}`);
   }
 };
 
@@ -27,17 +31,6 @@ const parseJson = (source, label) => {
     const details = cause instanceof Error ? cause.message : String(cause);
     return error(`Could not parse ${label}: ${details}`);
   }
-};
-
-const packageVersion = async (packageName) => {
-  const filePath = join(workspaceRoot, 'node_modules', packageName, 'package.json');
-  const parsed = parseJson(await readFile(filePath, 'utf8'), filePath);
-  if (parsed._tag === 'Error') return parsed;
-
-  const version = parsed.value?.version;
-  return typeof version === 'string' && version.length > 0
-    ? ok(version)
-    : error(`${filePath} does not contain a valid version.`);
 };
 
 const pack = async (directory) => {
@@ -59,25 +52,52 @@ const pack = async (directory) => {
 
 const formattedJson = (value) => `${JSON.stringify(value, undefined, 2)}\n`;
 
-const consumerPackage = (tarballPath, rescriptVersion, viteVersion) => ({
+const consumerPackage = (tarballPath, { rescriptVersion, runtimeVersion, viteVersion }) => ({
   name: 'rescript-css-package-smoke-test',
   private: true,
   type: 'module',
   dependencies: { '@jvlk/rescript-css': `file:${tarballPath}` },
-  devDependencies: { rescript: rescriptVersion, vite: viteVersion },
+  devDependencies: {
+    ...(runtimeVersion === undefined ? {} : { '@rescript/runtime': runtimeVersion }),
+    rescript: rescriptVersion,
+    vite: viteVersion,
+  },
 });
 
-const consumerConfig = {
+const supportedConsumers = [
+  { label: 'ReScript 11', rescriptVersion: '11.1.4', viteVersion: '8.3.0' },
+  {
+    label: 'ReScript 12',
+    rescriptVersion: '12.3.1',
+    runtimeVersion: '12.3.1',
+    viteVersion: '8.3.0',
+  },
+  {
+    label: 'ReScript 13 preview',
+    rescriptVersion: '13.0.0-alpha.6',
+    runtimeVersion: '13.0.0-alpha.6',
+    viteVersion: '8.3.0',
+  },
+];
+
+const consumerConfig = (rescriptVersion) => ({
   name: 'rescript-css-package-smoke-test',
   sources: [{ dir: 'src', subdirs: true }],
-  dependencies: ['@jvlk/rescript-css'],
-  'package-specs': { module: 'esmodule', 'in-source': true },
+  ...(rescriptVersion.startsWith('11.')
+    ? {
+        'bs-dependencies': ['@jvlk/rescript-css'],
+        'package-specs': [{ module: 'esmodule', 'in-source': true }],
+      }
+    : { dependencies: ['@jvlk/rescript-css'] }),
+  ...(rescriptVersion.startsWith('11.')
+    ? {}
+    : { 'package-specs': { module: 'esmodule', 'in-source': true } }),
   suffix: '.res.js',
-};
+});
 
-const consumerFiles = (tarballPath, rescriptVersion, viteVersion) => [
-  ['package.json', formattedJson(consumerPackage(tarballPath, rescriptVersion, viteVersion))],
-  ['rescript.json', formattedJson(consumerConfig)],
+const advancedConsumerFiles = (tarballPath, consumer) => [
+  ['package.json', formattedJson(consumerPackage(tarballPath, consumer))],
+  ['rescript.json', formattedJson(consumerConfig(consumer.rescriptVersion))],
   [
     'src/Animations.res',
     'let fadeIn = Css.keyframes(~layer=Css.namedLayer("components"), [Css.frame(~at="from", {opacity: 0.0}), Css.frame(~at="to", {opacity: 1.0})])\n',
@@ -101,6 +121,29 @@ const consumerFiles = (tarballPath, rescriptVersion, viteVersion) => [
   ['index.html', '<main id="app"></main><script type="module" src="/src/main.js"></script>\n'],
 ];
 
+const rescript11ConsumerFiles = (tarballPath, consumer) => [
+  ['package.json', formattedJson(consumerPackage(tarballPath, consumer))],
+  ['rescript.json', formattedJson(consumerConfig(consumer.rescriptVersion))],
+  [
+    'src/Smoke.res',
+    'let className = Css.class({display: Grid, maxWidth: Rem(32.0), margin: Auto, padding: Rem(1.5), color: Named("#0f172a"), background: "#ecfeff", hover: Css.style({background: "#cffafe"})})\n',
+  ],
+  [
+    'src/main.js',
+    'import { className } from "./Smoke.res.js";\ndocument.querySelector("#app").className = className;\n',
+  ],
+  [
+    'vite.config.js',
+    'import { defineConfig } from "vite";\nimport { rescriptCss } from "@jvlk/rescript-css/vite";\nexport default defineConfig({plugins: [rescriptCss()]});\n',
+  ],
+  ['index.html', '<main id="app"></main><script type="module" src="/src/main.js"></script>\n'],
+];
+
+const consumerFiles = (tarballPath, consumer) =>
+  consumer.rescriptVersion.startsWith('11.')
+    ? rescript11ConsumerFiles(tarballPath, consumer)
+    : advancedConsumerFiles(tarballPath, consumer);
+
 const writeConsumer = async (directory, files) => {
   await Promise.all(
     files.map(async ([relativePath, contents]) => {
@@ -111,7 +154,17 @@ const writeConsumer = async (directory, files) => {
   );
 };
 
-const verifyCss = async (consumerRoot) => {
+const verifyCss = async (consumerRoot, consumer) => {
+  if (consumer.rescriptVersion.startsWith('11.')) {
+    const css = await readFile(join(consumerRoot, 'src', 'Smoke.css'), 'utf8');
+    return css.includes('display: grid;') &&
+      css.includes('max-width: 32rem;') &&
+      css.includes('background: #ecfeff;') &&
+      css.includes('background: #cffafe;')
+      ? ok(undefined)
+      : error(`The installed package emitted unexpected CSS:\n${css}`);
+  }
+
   const [animationCss, fontCss, smokeCss] = await Promise.all(
     ['Animations.css', 'Fonts.css', 'Smoke.css'].map((filename) =>
       readFile(join(consumerRoot, 'src', filename), 'utf8'),
@@ -154,33 +207,54 @@ const verifyCss = async (consumerRoot) => {
       );
 };
 
+const verifyConsumer = async (temporaryRoot, tarball, consumer) => {
+  const consumerRoot = join(temporaryRoot, consumer.rescriptVersion);
+  const libraryRoot = join(consumerRoot, 'node_modules', '@jvlk', 'rescript-css');
+  const compiler = join(consumerRoot, 'node_modules', '.bin', 'rescript');
+
+  await writeConsumer(consumerRoot, consumerFiles(tarball, consumer));
+  const commands = [
+    ['pnpm', ['install', '--no-frozen-lockfile', '--ignore-scripts'], consumerRoot],
+    [compiler, ['clean'], libraryRoot],
+    [compiler, ['build'], libraryRoot],
+    ['pnpm', ['exec', 'rescript', 'build'], consumerRoot],
+    ['pnpm', ['exec', 'vite', 'build'], consumerRoot],
+  ];
+  for (const [command, args, cwd] of commands) {
+    const result = await run(command, args, cwd);
+    if (result._tag === 'Error') return error(`${consumer.label}: ${result.message}`);
+  }
+
+  const result = await verifyCss(consumerRoot, consumer);
+  return result._tag === 'Error' ? error(`${consumer.label}: ${result.message}`) : result;
+};
+
+const selectedConsumers = () => {
+  const [selection] = process.argv.slice(2);
+  if (selection === undefined) return ok(supportedConsumers);
+
+  const consumer = supportedConsumers.find(({ rescriptVersion }) =>
+    rescriptVersion.startsWith(`${selection}.`),
+  );
+  return consumer === undefined
+    ? error(`Unknown ReScript compatibility target: ${selection}.`)
+    : ok([consumer]);
+};
+
 const verifyPackage = async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), 'rescript-css-package-'));
-  const consumerRoot = join(temporaryRoot, 'consumer');
 
   try {
-    const [tarball, rescriptVersion, viteVersion] = await Promise.all([
-      pack(temporaryRoot),
-      packageVersion('rescript'),
-      packageVersion('vite'),
-    ]);
-    const failure = [tarball, rescriptVersion, viteVersion].find(({ _tag }) => _tag === 'Error');
-    if (failure !== undefined) return failure;
+    const [tarball, consumers] = await Promise.all([pack(temporaryRoot), selectedConsumers()]);
+    if (tarball._tag === 'Error') return tarball;
+    if (consumers._tag === 'Error') return consumers;
 
-    await writeConsumer(
-      consumerRoot,
-      consumerFiles(tarball.value, rescriptVersion.value, viteVersion.value),
-    );
-    for (const [command, args] of [
-      ['pnpm', ['install', '--no-frozen-lockfile', '--ignore-scripts']],
-      ['pnpm', ['exec', 'rescript', 'build']],
-      ['pnpm', ['exec', 'vite', 'build']],
-    ]) {
-      const result = await run(command, args, consumerRoot);
+    for (const consumer of consumers.value) {
+      const result = await verifyConsumer(temporaryRoot, tarball.value, consumer);
       if (result._tag === 'Error') return result;
     }
 
-    return verifyCss(consumerRoot);
+    return ok(undefined);
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }
@@ -192,7 +266,7 @@ try {
     console.error(result.message);
     process.exitCode = 1;
   } else {
-    console.log('Verified the packed package in a clean ReScript and Vite consumer.');
+    console.log('Verified the packed package in clean ReScript and Vite consumers.');
   }
 } catch (cause) {
   console.error(cause instanceof Error ? cause.message : String(cause));

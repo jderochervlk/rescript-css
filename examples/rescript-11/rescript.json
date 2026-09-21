@@ -1,0 +1,17 @@
+{
+  "name": "example-rescript-11",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "bs-dependencies": ["@jvlk/rescript-css"],
+  "package-specs": [
+    {
+      "module": "esmodule",
+      "in-source": true
+    }
+  ],
+  "suffix": ".res.js"
+}

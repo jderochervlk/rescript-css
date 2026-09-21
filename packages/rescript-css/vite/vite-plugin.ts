@@ -988,7 +988,7 @@ const declarationForCall = (
   openingParenthesisIndex: number,
 ): StyleDeclaration | undefined => {
   const lineStart = source.lastIndexOf('\n', callStart) + 1;
-  const declaration = /^(?:let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*$/u.exec(
+  const declaration = /^(?:let|const|var)\s+([A-Za-z_$][\w$]*)\s*=\s*$/u.exec(
     source.slice(lineStart, callStart),
   );
   const classNameVariable = declaration?.[1];
@@ -1703,6 +1703,13 @@ export const rescriptCss = (): Plugin => {
     },
     async transform(source, id) {
       if (!matcher.isStylesheetModule(id, source)) {
+        return null;
+      }
+
+      const stylesheetImport = stylesheetImportFor(id, matcher.cssFilePathFor(id));
+
+      // Vite 8 invokes this hook after configResolved has already generated the stylesheet.
+      if (source.includes(stylesheetImport)) {
         return null;
       }
 

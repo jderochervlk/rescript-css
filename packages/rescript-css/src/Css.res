@@ -411,8 +411,8 @@ let register: definition => string = definition => Runtime.style(definition)
 
 let lengthValue = CssValue.Length.toString
 let displayValue = CssValue.Display.toString
-let intValue = value => value->Int.toString
-let floatValue = value => value->Float.toString
+let intValue = value => Compat.intToString(value)
+let floatValue = value => Compat.floatToString(value)
 
 let media = (~query, style) => {condition: `@media ${query}`, style}
 let supports = (~condition, style) => {condition: `@supports ${condition}`, style}
@@ -447,7 +447,7 @@ let mapOptional = (value, serialize) =>
   }
 
 let declarationsFrom = fields =>
-  fields->Array.filterMap(((property, value)) =>
+  fields->Compat.arrayFilterMap(((property, value)) =>
     switch value {
     | Some(value) => Some((property, value))
     | None => None
@@ -970,21 +970,21 @@ let columnDeclarations = css =>
 
 let declarationsFor = css =>
   layoutDeclarations(css)
-  ->Array.concat(sizeDeclarations(css))
-  ->Array.concat(marginDeclarations(css))
-  ->Array.concat(paddingDeclarations(css))
-  ->Array.concat(flexDeclarations(css))
-  ->Array.concat(gridDeclarations(css))
-  ->Array.concat(fontDeclarations(css))
-  ->Array.concat(textDeclarations(css))
-  ->Array.concat(backgroundDeclarations(css))
-  ->Array.concat(borderDeclarations(css))
-  ->Array.concat(effectDeclarations(css))
-  ->Array.concat(motionDeclarations(css))
-  ->Array.concat(contentDeclarations(css))
-  ->Array.concat(interactionDeclarations(css))
-  ->Array.concat(columnDeclarations(css))
-  ->Array.concat(
+  ->Compat.arrayConcat(sizeDeclarations(css))
+  ->Compat.arrayConcat(marginDeclarations(css))
+  ->Compat.arrayConcat(paddingDeclarations(css))
+  ->Compat.arrayConcat(flexDeclarations(css))
+  ->Compat.arrayConcat(gridDeclarations(css))
+  ->Compat.arrayConcat(fontDeclarations(css))
+  ->Compat.arrayConcat(textDeclarations(css))
+  ->Compat.arrayConcat(backgroundDeclarations(css))
+  ->Compat.arrayConcat(borderDeclarations(css))
+  ->Compat.arrayConcat(effectDeclarations(css))
+  ->Compat.arrayConcat(motionDeclarations(css))
+  ->Compat.arrayConcat(contentDeclarations(css))
+  ->Compat.arrayConcat(interactionDeclarations(css))
+  ->Compat.arrayConcat(columnDeclarations(css))
+  ->Compat.arrayConcat(
     switch css.custom {
     | Some(declarations) => declarations
     | None => []
@@ -993,7 +993,7 @@ let declarationsFor = css =>
 
 let conditionsFor = conditions =>
   switch conditions {
-  | Some(conditions) => conditions->Array.map(({condition, style}) => (condition, style))
+  | Some(conditions) => conditions->Compat.arrayMap(({condition, style}) => (condition, style))
   | None => []
   }
 
@@ -1048,21 +1048,21 @@ let nestedFor = css =>
     ("&::placeholder", css.placeholder),
     ("&::selection", css.selection),
   ]
-  ->Array.filterMap(((selector, className)) =>
+  ->Compat.arrayFilterMap(((selector, className)) =>
     switch className {
     | Some(className) => Some((selector, className))
     | None => None
     }
   )
-  ->Array.concat(
+  ->Compat.arrayConcat(
     switch css.selectors {
     | Some(selectors) => selectors
     | None => []
     },
   )
-  ->Array.concat(conditionsFor(css.media))
-  ->Array.concat(conditionsFor(css.supports))
-  ->Array.concat(conditionsFor(css.containerQueries))
+  ->Compat.arrayConcat(conditionsFor(css.media))
+  ->Compat.arrayConcat(conditionsFor(css.supports))
+  ->Compat.arrayConcat(conditionsFor(css.containerQueries))
 
 let definitionFor = (css: css): definition => {
   let vars = switch css.vars {
@@ -1105,7 +1105,7 @@ let fontFace = (~layer=Runtime.unlayeredLayer, descriptors: fontFaceDescriptors)
   switch CssFont.serialize(descriptors) {
   | Ok({family, cssText}) => Runtime.fontFace(~layer, family, cssText)
   | Error(error) =>
-    JsError.throwWithMessage(`@jvlk/rescript-css: ${CssFont.validationMessage(error)}`)
+    Compat.throwWithMessage(`@jvlk/rescript-css: ${CssFont.validationMessage(error)}`)
   }
 
 type propertyDescriptors = {
