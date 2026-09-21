@@ -42,15 +42,19 @@
     "prepublishOnly": "pnpm --dir ../.. format:check && pnpm --dir ../.. typecheck && pnpm --dir ../.. test",
     "typecheck": "tsc --noEmit --project tsconfig.json"
   },
-  "dependencies": {
-    "@rescript/runtime": "^12.0.0"
-  },
   "devDependencies": {
+    "@rescript/runtime": "^12.0.0",
     "rescript": "11.1.4",
     "vite": "^8.3.0"
   },
   "peerDependencies": {
+    "@rescript/runtime": "^12.0.0 || 13.0.0-alpha.6",
     "vite": ">=7.0.0 <9.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rescript/runtime": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=24.12.0"
