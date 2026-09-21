@@ -1664,6 +1664,25 @@ test('generates and imports CSS through the Vite transform hook', async () => {
   await expect(readFile(cssFilePath, 'utf8')).resolves.toContain('display: flex;');
 });
 
+test('inlines ReScript 11 var style declarations', async () => {
+  const pluginRoot = fileURLToPath(
+    new URL('./__fixtures__/configured-project/vite-root', import.meta.url),
+  );
+  const compiledModulePath = fileURLToPath(
+    new URL('./__fixtures__/var-declaration.res.mjs', import.meta.url),
+  );
+  const plugin = await configurePlugin(pluginRoot);
+  const source = `import * as Css from '@jvlk/rescript-css/src/Css.res.mjs';
+var button = Css.style({});
+export { button };`;
+
+  const code = codeFromTransformResult(await transform(plugin, source, compiledModulePath));
+
+  expect(code).toContain('var button = "rc_');
+  expect(code).not.toContain('Css.style');
+  expect(code).not.toContain('import * as Css');
+});
+
 test('does not collect a stylesheet module that already imports generated CSS', async () => {
   const pluginRoot = fileURLToPath(
     new URL('./__fixtures__/configured-project/vite-root', import.meta.url),

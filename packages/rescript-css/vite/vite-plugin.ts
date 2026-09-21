@@ -988,7 +988,7 @@ const declarationForCall = (
   openingParenthesisIndex: number,
 ): StyleDeclaration | undefined => {
   const lineStart = source.lastIndexOf('\n', callStart) + 1;
-  const declaration = /^(?:let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*$/u.exec(
+  const declaration = /^(?:let|const|var)\s+([A-Za-z_$][\w$]*)\s*=\s*$/u.exec(
     source.slice(lineStart, callStart),
   );
   const classNameVariable = declaration?.[1];
