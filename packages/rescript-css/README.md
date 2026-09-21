@@ -1,7 +1,34 @@
 # @jvlk/rescript-css
 
-Typed, statically extracted CSS for ReScript. Author styles with ReScript values and let the Vite
-plugin emit ordinary CSS files without browser runtime injection.
+Write CSS in ReScript next to the components that use it. The Vite plugin compiles typed style
+values into ordinary CSS and scoped class names, with no browser runtime style injection.
+
+## Usage
+
+Keep a component and its styles in the same ReScript module:
+
+```rescript
+module Styles = {
+  let button = Css.class({
+    display: InlineFlex,
+    alignItems: Center,
+    gap: Rem(0.5),
+    padding: Px(12),
+    color: Named("white"),
+    background: "#0f766e",
+    borderRadius: Raw("6px"),
+    cursor: Pointer,
+    hover: Css.style({background: "#115e59"}),
+  })
+}
+
+@react.component
+let make = () =>
+  <button className=Styles.button> {React.string("Save")} </button>
+```
+
+The generated value is an ordinary class-name string. Pass it to `className` in React, set it on a
+DOM element with `@rescript/webapi`, or use it with any other ReScript UI framework.
 
 ## Install
 
@@ -42,31 +69,6 @@ Compile ReScript before starting or building with Vite:
     "build": "rescript build && vite build"
   }
 }
-```
-
-## Use
-
-Declare styles at module scope:
-
-```rescript
-module Styles = {
-  let button = Css.style({
-    display: InlineFlex,
-    alignItems: Center,
-    padding: Px(12),
-    color: Named("white"),
-    background: "#0f766e",
-    borderRadius: Raw("6px"),
-  })
-}
-```
-
-Use the returned class name as a string:
-
-```rescript
-@react.component
-let make = () =>
-  <button className=Styles.button> {React.string("Save")} </button>
 ```
 
 The package also supports global styles, CSS variables, nested selectors, media and feature
