@@ -95,11 +95,27 @@ type regex
 module CollectorStore = {
   @val external globalThis: unknown = "globalThis"
   @val @scope("Symbol") external symbolFor: string => unknown = "for"
-  @val @scope("Reflect") external get: (unknown, unknown) => option<unknown> = "get"
+  @val @scope("Reflect") external get: (unknown, unknown) => unknown = "get"
   @val @scope("Reflect") external set: (unknown, unknown, 'value) => bool = "set"
   external collectorFromUnknown: unknown => collector = "%identity"
 
   let key = symbolFor("@jvlk/rescript-css.collector")
+
+  let isCollector: unknown => bool = %raw(`value =>
+    value !== null &&
+    typeof value === "object" &&
+    typeof value.scope === "string" &&
+    Array.isArray(value.styles) &&
+    Array.isArray(value.rules) &&
+    Array.isArray(value.keyframes) &&
+    Array.isArray(value.fontFaces) &&
+    Array.isArray(value.properties) &&
+    Array.isArray(value.scopes) &&
+    Array.isArray(value.pages) &&
+    Array.isArray(value.layerOrder) &&
+    typeof value.nextRuleOrder === "number" &&
+    Array.isArray(value.variables) &&
+    typeof value.rootCssText === "string"`)
 
   let read = () => get(globalThis, key)
 
@@ -107,11 +123,7 @@ module CollectorStore = {
     let _ = set(globalThis, key, collector)
   }
 
-  let decode = value =>
-    switch value {
-    | Some(value) => Some(collectorFromUnknown(value))
-    | None => None
-    }
+  let decode = value => isCollector(value) ? Some(collectorFromUnknown(value)) : None
 }
 
 let hashScope = scope => {

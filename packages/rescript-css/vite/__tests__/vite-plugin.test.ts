@@ -2015,6 +2015,22 @@ test('reports a corrupted collected-rule shape as a Vite error', async () => {
   );
 });
 
+test('replaces malformed collector state before evaluating a stylesheet module', async () => {
+  const pluginRoot = fileURLToPath(
+    new URL('./__fixtures__/configured-project/vite-root', import.meta.url),
+  );
+  const compiledModulePath = fileURLToPath(
+    new URL('./__fixtures__/malformed-collector.res.mjs', import.meta.url),
+  );
+  const plugin = await configurePlugin(pluginRoot);
+  const source =
+    "import * as Css from '@jvlk/rescript-css/src/Css.res.mjs';\nconst button = Css.style({});";
+
+  await expect(transform(plugin, source, compiledModulePath)).resolves.toMatchObject({
+    code: expect.stringContaining('import "./malformed-collector.css";'),
+  });
+});
+
 test('reports modules that cannot be loaded as Vite errors', async () => {
   const pluginRoot = fileURLToPath(
     new URL('./__fixtures__/configured-project/vite-root', import.meta.url),
