@@ -1,7 +1,7 @@
 # @jvlk/rescript-css
 
-Typed, statically extracted CSS for ReScript. Write styles with ReScript values and let the Vite
-plugin emit ordinary CSS with scoped class names and custom properties.
+Typed, statically extracted CSS for ReScript. Author styles with ReScript values and let the Vite
+plugin emit ordinary CSS files without browser runtime injection.
 
 ## Install
 
@@ -9,7 +9,7 @@ plugin emit ordinary CSS with scoped class names and custom properties.
 pnpm add @jvlk/rescript-css
 ```
 
-Add the package to `rescript.json`:
+Add the package to `rescript.json` with ESM output:
 
 ```json
 {
@@ -22,9 +22,9 @@ Add the package to `rescript.json`:
 }
 ```
 
-Then configure the Vite plugin:
+Configure Vite:
 
-```js
+```ts
 import { defineConfig } from 'vite';
 import { rescriptCss } from '@jvlk/rescript-css/vite';
 
@@ -33,18 +33,45 @@ export default defineConfig({
 });
 ```
 
+Compile ReScript before starting or building with Vite:
+
+```json
+{
+  "scripts": {
+    "dev": "rescript build && vite",
+    "build": "rescript build && vite build"
+  }
+}
+```
+
 ## Use
+
+Declare styles at module scope:
 
 ```rescript
 module Styles = {
   let button = Css.style({
     display: InlineFlex,
-    padding: Px(16),
+    alignItems: Center,
+    padding: Px(12),
     color: Named("white"),
     background: "#0f766e",
+    borderRadius: Raw("6px"),
   })
 }
 ```
 
-For variables, nested styles, conditional rules, and the full value API, see the
-[documentation](https://github.com/jderochervlk/rescript-css/tree/main/docs).
+Use the returned class name as a string:
+
+```rescript
+@react.component
+let make = () =>
+  <button className=Styles.button> {React.string("Save")} </button>
+```
+
+The package also supports global styles, CSS variables, nested selectors, media and feature
+queries, keyframes, font faces, cascade layers, structured at-rules, modern properties, SVG values,
+and deliberate `Raw` escape hatches.
+
+See the [complete documentation](https://github.com/jderochervlk/rescript-css/tree/main/docs) and
+[migration guidance](https://github.com/jderochervlk/rescript-css/blob/main/docs/values-and-properties.md#0x-structured-value-migration).

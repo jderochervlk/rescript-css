@@ -12,14 +12,9 @@ names.
 - [CSS variables](variables.md): declaring, registering, consuming, and overriding shared tokens.
 - [Nesting and conditional rules](nesting.md): descendants, states, arbitrary selectors, media
   queries, feature queries, and container queries.
-- [Follow-up work](follow-up.md): known conservative boundaries and useful next implementation
-  slices.
-- [Releasing](releasing.md): package verification, the first manual publish, and automated releases.
 
-## Implementation Plans
-
-- [CSS surface expansion plans](plans/README.md): coordinated handoff documents for at-rules,
-  global styles, modern properties, and richer values.
+Repository setup, verification, generated-artifact rules, implementation follow-ups, and release
+operations are documented in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## API At A Glance
 

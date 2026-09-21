@@ -1,31 +1,46 @@
 # @jvlk/rescript-css
 
-An experimental typed CSS workspace for ReScript.
+Typed, statically extracted CSS for ReScript. Write styles as ReScript values and let the Vite
+plugin emit ordinary CSS files with scoped class names, variables, animations, fonts, and at-rules.
+No browser runtime style injection is required.
 
-The Vite plugin finds static `Css.style` calls in compiled ReScript modules,
-writes neighboring `*.css` assets, and imports those assets into Vite.
+## Requirements
 
-## Documentation
+- ReScript 12
+- Vite 7
+- Node.js `^20.19.0` or `>=22.12.0`
 
-- [Documentation overview](docs/README.md)
-- [Getting started](docs/getting-started.md)
-- [Values and properties](docs/values-and-properties.md)
-- [CSS variables](docs/variables.md)
-- [Nesting and conditional rules](docs/nesting.md)
-- [Follow-up work](docs/follow-up.md)
-- [Changelog](CHANGELOG.md)
-- [Releasing](docs/releasing.md)
-
-## Quick start
-
-Install workspace dependencies and build an example:
+## Install
 
 ```sh
-pnpm install
-pnpm build:basic
+pnpm add @jvlk/rescript-css
 ```
 
-Use the plugin in Vite:
+```sh
+npm install @jvlk/rescript-css
+```
+
+## Configure ReScript
+
+Add the package to `rescript.json` and emit ESM modules:
+
+```json
+{
+  "dependencies": ["@jvlk/rescript-css"],
+  "package-specs": {
+    "module": "esmodule",
+    "in-source": true
+  },
+  "suffix": ".res.js"
+}
+```
+
+Custom ESM suffixes such as `.res.mjs` are supported. The Vite plugin discovers the configured
+suffix from the nearest `rescript.json`.
+
+## Configure Vite
+
+Add `rescriptCss()` to the application's plugins:
 
 ```ts
 import { defineConfig } from 'vite';
@@ -36,208 +51,144 @@ export default defineConfig({
 });
 ```
 
-Create styles directly in `Component.res`:
+Compile ReScript before Vite runs:
+
+```json
+{
+  "scripts": {
+    "dev": "rescript build && vite",
+    "build": "rescript build && vite build"
+  }
+}
+```
+
+## Create And Consume A Style
+
+Declare styles at module scope. The surrounding `Css.style` call supplies the record type, so
+contextual constructors such as `InlineFlex`, `Px`, and `Named` do not need a module prefix:
 
 ```rescript
 module Styles = {
   let button = Css.style({
     display: InlineFlex,
+    alignItems: Center,
+    gap: Rem(0.5),
+    padding: Px(12),
     color: Named("white"),
+    background: "#0f766e",
+    borderRadius: Raw("6px"),
+    cursor: Pointer,
   })
 }
 ```
 
-Use the class name in the same component:
+The returned value is an ordinary class-name string:
 
 ```rescript
-let buttonClassName = Styles.button
+@react.component
+let make = () =>
+  <button className=Styles.button> {React.string("Save")} </button>
 ```
 
-The plugin emits `Component.css` and adds it to Vite's module graph automatically.
+Framework-free code uses the same value:
 
-## CSS variables
+```rescript
+let html = `<button class="${Styles.button}">Save</button>`
+```
 
-Define shared variables in a registry module and register their initial values on `:root`:
+During the Vite build, the plugin replaces the registration call with a stable class name and emits
+a neighboring stylesheet:
+
+```css
+.rc_abc123_0 {
+  display: inline-flex;
+  padding: 12px;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  background: #0f766e;
+  border-radius: 6px;
+  cursor: pointer;
+}
+```
+
+## Global Styles And Variables
+
+Use `Css.global` for document-level selectors and `Css.var` for shared custom properties:
 
 ```rescript
 // Vars.res
-let brand = Css.var("#0f766e")
-let onBrand = Css.var("#ffffff")
-let spaceMd = Css.var("1rem")
+let canvas = Css.var("#f8fafc")
+let text = Css.var("#172321")
 
-let _ = Css.registerVars([brand, onBrand, spaceMd])
+let _ = Css.registerVars([canvas, text])
 ```
-
-The ReScript and JavaScript exports retain their source names. Generated CSS uses scoped hashes:
-
-```css
-:root {
-  --rc_16lsq83: #0f766e;
-  --rc_1se5ehu: #ffffff;
-  --rc_w2uaph: 1rem;
-}
-```
-
-Variable references can be consumed directly from any stylesheet module:
 
 ```rescript
-let button = Css.style({
-  background: Vars.brand,
-  color: Var(Vars.onBrand),
-  padding: Var(Vars.spaceMd),
+// GlobalStyles.res
+let _ = Css.global(~selector="*, *::before, *::after", {
+  boxSizing: BorderBox,
+})
+
+let _ = Css.global(~selector="body", {
+  margin: Zero,
+  color: Var(Vars.text),
+  background: Vars.canvas,
 })
 ```
 
-Override variables within any style scope through the `vars` field:
+Import the compiled registry modules from the application's JavaScript entry point when they are
+not already reached through another ReScript module:
 
-```rescript
-let alternate = Css.style({
-  vars: [
-    (Vars.brand, "#2dd4bf"),
-    (Vars.onBrand, "#042f2e"),
-  ],
-  background: Vars.brand,
-  color: Var(Vars.onBrand),
-  padding: Rem(1.0),
-})
+```js
+import './Vars.res.js';
+import './GlobalStyles.res.js';
 ```
 
-## Typed units
+## Nested And Conditional Styles
 
-Length-valued properties use variants. The surrounding `Css.style` call gives ReScript enough
-context to resolve their constructors without a `Css.` prefix:
-
-```rescript
-let box = Css.style({
-  width: Rem(24.0),
-  padding: Px(16),
-  margin: Auto,
-  fontSize: Em(1.125),
-})
-```
-
-The API covers common layout, logical sizing and spacing, flexbox, grid, typography, borders,
-backgrounds, effects, animation, scrolling, tables, lists, and interaction properties. Finite CSS
-keywords and common compound values use contextual variants, while shorthands and open grammars
-remain strings:
+`Css.class` folds nested rules into its generated class. Element, state, arbitrary selector, media,
+feature, and container-query helpers are available:
 
 ```rescript
-let panel = Css.style({
+let card = Css.class({
   display: Grid,
-  gridTemplateColumns: Raw("repeat(auto-fit, minmax(16rem, 1fr))"),
-  alignItems: Center,
   gap: Rem(1.0),
-  overflow: Hidden,
-  borderStyle: Solid,
-  borderRadius: Raw("8px"),
-  fontWeight: Weight(600),
-  lineHeight: Number(1.5),
-  cursor: Pointer,
-})
-```
-
-Use `Percent`, `Zero`, and `Raw` for percentages, unitless zero, and an explicit escape hatch.
-CSS variable references use `Var` in length-valued properties:
-
-```rescript
-let card = Css.style({
-  width: Percent(100.0),
-  padding: Var(Vars.spaceMd),
-})
-```
-
-The generated `Vars.res.js` imports `Vars.css`. Vite includes that stylesheet once even when
-many modules consume the same variables.
-
-## Nested styles
-
-Use `Css.class` when a class owns styles for a nested element. Nested `Css.style` calls are
-folded into the parent class rather than exposed as separate class names:
-
-```rescript
-module Styles = {
-  let box = Css.class({
-    background: Vars.surface,
-    padding: Var(Vars.spaceMd),
-    h1: Css.style({
-      color: Var(Vars.brand),
-    }),
-  })
-}
-```
-
-Apply only the parent class:
-
-```rescript
-<article className=Styles.box>
-  <h1> {React.string("Nested heading")} </h1>
-</article>
-```
-
-The nested rule shares the parent's hashed class in generated CSS:
-
-```css
-.rc_abc123_0 h1 {
-  color: var(--rc_def456);
-}
-```
-
-Common elements, states, and pseudo-elements can be nested the same way:
-
-```rescript
-let button = Css.class({
-  cursor: Pointer,
-  hover: Css.style({
-    transform: TranslateY(Px(-1)),
-  }),
-  focusVisible: Css.style({
-    outline: "2px solid currentColor",
-  }),
-  before: Css.style({
-    content: "\"\"",
-  }),
-})
-```
-
-Arbitrary selectors and conditional rules cover selectors and at-rules that do not have dedicated
-fields:
-
-```rescript
-let layout = Css.class({
+  h2: Css.style({color: Named("teal")}),
+  hover: Css.style({transform: TranslateY(Px(-1))}),
   selectors: [
-    ("> strong", Css.style({fontWeight: Bold})),
-    ("&[data-compact]", Css.style({padding: Rem(1.0)})),
+    ("&[data-compact]", Css.style({padding: Rem(0.75)})),
   ],
   media: [
     Css.media(
       ~query="(width >= 48rem)",
-      Css.style({
-        gridTemplateColumns: Raw("repeat(2, minmax(0, 1fr))"),
-      }),
+      Css.style({gridTemplateColumns: Raw("repeat(2, minmax(0, 1fr))")}),
     ),
   ],
-  supports: [
-    Css.supports(~condition="(container-type: inline-size)", Css.style({containerType: "inline-size"})),
-  ],
 })
 ```
 
-Use `custom` as the final fallback for new or uncommon declarations. Custom declarations are
-emitted after typed fields, so they can intentionally override them:
+## Static CSS Features
 
-```rescript
-let experimental = Css.style({
-  custom: [("field-sizing", "content")],
-})
-```
+The package also extracts these module-level registrations:
 
-Run `pnpm dev:basic`, `pnpm dev:react`, or `pnpm dev:xote` to compile and serve a focused example.
+- Hashed `Css.keyframes` animations
+- Typed `Css.fontFace` declarations
+- Named and anonymous cascade layers
+- Structured `@property`, `@scope`, and `@page` rules
+- Typed modern properties, SVG presentation values, transforms, easing, and grid tracks
 
-## Workspace
+Keep `Css.style`, `Css.class`, `Css.keyframes`, and `Css.fontFace` directly assigned to top-level
+bindings. Keep unit-returning registrations such as `Css.global` and `Css.layerOrder` at module
+scope. This gives the plugin stable declarations to collect and remove from the browser bundle.
 
-- `packages/rescript-css`: the ReScript API, CSS collection runtime, and `@jvlk/rescript-css/vite` plugin entry point.
-- `examples/basic`: a framework-free Vite example.
-- `examples/react`: a ReScript React Vite example.
-- `examples/xote`: a reactive [Xote](https://xote.dev/) Vite example.
+## Documentation
 
-Use `pnpm build:basic`, `pnpm build:react`, or `pnpm build:xote` for isolated production builds.
+- [Getting started](docs/getting-started.md)
+- [Values, modern properties, and migration guidance](docs/values-and-properties.md)
+- [CSS variables](docs/variables.md)
+- [Nesting, queries, scopes, and layers](docs/nesting.md)
+- [Changelog](CHANGELOG.md)
+
+For repository setup, testing, generated artifacts, release operations, and future engineering work,
+see [CONTRIBUTING.md](CONTRIBUTING.md).
