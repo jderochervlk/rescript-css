@@ -1,8 +1,34 @@
 # @jvlk/rescript-css
 
-Typed, statically extracted CSS for ReScript. Write styles as ReScript values and let the Vite
-plugin emit ordinary CSS files with scoped class names, variables, animations, fonts, and at-rules.
-No browser runtime style injection is required.
+Write CSS in ReScript next to the components that use it. The Vite plugin compiles typed style
+values into ordinary CSS and scoped class names, with no browser runtime style injection.
+
+## Usage
+
+Keep a component and its styles in the same ReScript module:
+
+```rescript
+module Styles = {
+  let button = Css.class({
+    display: InlineFlex,
+    alignItems: Center,
+    gap: Rem(0.5),
+    padding: Px(12),
+    color: Named("white"),
+    background: "#0f766e",
+    borderRadius: Raw("6px"),
+    cursor: Pointer,
+    hover: Css.style({background: "#115e59"}),
+  })
+}
+
+@react.component
+let make = () =>
+  <button className=Styles.button> {React.string("Save")} </button>
+```
+
+The generated value is an ordinary class-name string. Pass it to `className` in React, set it on a
+DOM element with `@rescript/webapi`, or use it with any other ReScript UI framework.
 
 ## Requirements
 
@@ -62,42 +88,10 @@ Compile ReScript before Vite runs:
 }
 ```
 
-## Create And Consume A Style
+## Generated CSS
 
-Declare styles at module scope. The surrounding `Css.style` call supplies the record type, so
-contextual constructors such as `InlineFlex`, `Px`, and `Named` do not need a module prefix:
-
-```rescript
-module Styles = {
-  let button = Css.style({
-    display: InlineFlex,
-    alignItems: Center,
-    gap: Rem(0.5),
-    padding: Px(12),
-    color: Named("white"),
-    background: "#0f766e",
-    borderRadius: Raw("6px"),
-    cursor: Pointer,
-  })
-}
-```
-
-The returned value is an ordinary class-name string:
-
-```rescript
-@react.component
-let make = () =>
-  <button className=Styles.button> {React.string("Save")} </button>
-```
-
-Framework-free code uses the same value:
-
-```rescript
-let html = `<button class="${Styles.button}">Save</button>`
-```
-
-During the Vite build, the plugin replaces the registration call with a stable class name and emits
-a neighboring stylesheet:
+During the Vite build, the plugin replaces the style registration with a stable class name and
+emits a neighboring stylesheet:
 
 ```css
 .rc_abc123_0 {
