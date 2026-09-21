@@ -2050,6 +2050,16 @@ test('replaces malformed collector state before evaluating a stylesheet module',
   });
 });
 
+test('filter maps large arrays without recursive stack growth', async () => {
+  const { arrayFilterMap } = await import('../../src/Compat.res.js');
+  const values = Array.from({ length: 50000 }, (_, index) => index);
+  const evenValues = arrayFilterMap(values, (value) => (value % 2 === 0 ? value : undefined));
+
+  expect(evenValues).toHaveLength(25000);
+  expect(evenValues[0]).toBe(0);
+  expect(evenValues.at(-1)).toBe(49998);
+});
+
 test('reports modules that cannot be loaded as Vite errors', async () => {
   const pluginRoot = fileURLToPath(
     new URL('./__fixtures__/configured-project/vite-root', import.meta.url),

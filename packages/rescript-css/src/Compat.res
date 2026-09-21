@@ -12,6 +12,7 @@
 @send
 external nativeArrayFlatMap: (array<'input>, 'input => array<'output>) => array<'output> = "flatMap"
 @send external nativeArrayFilter: (array<'value>, 'value => bool) => array<'value> = "filter"
+@send external nativeArrayPush: (array<'value>, 'value) => unit = "push"
 @send external nativeArrayIncludes: (array<'value>, 'value) => bool = "includes"
 @send external nativeArraySliceToEnd: (array<'value>, int) => array<'value> = "slice"
 @send external nativeArrayEvery: (array<'value>, 'value => bool) => bool = "every"
@@ -67,23 +68,23 @@ let arraySliceToEnd = (values, start) => nativeArraySliceToEnd(values, start)
 
 let arrayEvery = (values, predicate) => nativeArrayEvery(values, predicate)
 
-let rec arrayFilterMapAt = (
-  values: array<'input>,
-  mapper: 'input => option<'output>,
-  index: int,
-): array<'output> =>
-  if index === values->Array.length {
-    []
-  } else {
-    let remaining = arrayFilterMapAt(values, mapper, index + 1)
-    switch mapper(nativeArrayGetUnsafe(values, index)) {
-    | Some(value) => nativeArrayConcat([value], remaining)
-    | None => remaining
+let arrayFilterMap = (values: array<'input>, mapper: 'input => option<'output>): array<'output> => {
+  let results: array<'output> = []
+  let rec filterMapAt = index =>
+    if index === values->Array.length {
+      results
+    } else {
+      switch mapper(nativeArrayGetUnsafe(values, index)) {
+      | Some(value) => {
+          nativeArrayPush(results, value)
+          filterMapAt(index + 1)
+        }
+      | None => filterMapAt(index + 1)
+      }
     }
-  }
 
-let arrayFilterMap = (values: array<'input>, mapper: 'input => option<'output>): array<'output> =>
-  arrayFilterMapAt(values, mapper, 0)
+  filterMapAt(0)
+}
 
 let arrayJoin = (values, delimiter) => nativeArrayJoin(values, delimiter)
 
