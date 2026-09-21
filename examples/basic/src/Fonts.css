@@ -1,0 +1,9 @@
+@layer tokens {
+  @font-face {
+    font-family: "Inter";
+    src: local("Inter"), url("/fonts/inter.woff2") format("woff2") tech(variations);
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+  }
+}

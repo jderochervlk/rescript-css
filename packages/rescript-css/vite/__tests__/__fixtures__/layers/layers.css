@@ -1,0 +1,67 @@
+@layer reset, base, framework.components;
+
+:root {
+  --layer-fixture: teal;
+}
+
+@layer reset {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+}
+
+@layer framework.components {
+  .rc_fixture_button {
+    display: inline-flex;
+  }
+
+  @keyframes rc_kf_p33ud0 {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  @media (width >= 48rem) {
+    body {
+      font-size: 1.125rem;
+    }
+  }
+
+  @supports (display: grid) {
+    body {
+      display: grid;
+    }
+  }
+}
+
+@layer framework.components {
+  @font-face {
+    font-family: "Layer Sans";
+    src: local("Layer Sans");
+  }
+
+  .component-sibling {
+    color: teal;
+  }
+}
+
+@layer {
+  .anonymous-one {
+    color: red;
+  }
+}
+
+@layer {
+  .anonymous-two {
+    color: blue;
+  }
+}
+
+.rc_fixture_utility {
+  color: inherit;
+}

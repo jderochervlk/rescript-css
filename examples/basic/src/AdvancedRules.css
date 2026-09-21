@@ -1,0 +1,24 @@
+@layer tokens {
+  @property --card-progress {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+  }
+}
+
+@layer base {
+  @scope (article) {
+    :scope > h1 {
+      color: #172554;
+    }
+
+    :scope > h1 + p {
+      margin-block-start: 0.5rem;
+    }
+  }
+}
+
+@page :first {
+  size: A4;
+  margin: 2cm;
+}

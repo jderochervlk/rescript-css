@@ -23,6 +23,7 @@
 
 .rc_e12d7f_1 {
   display: grid;
+  position: relative;
   overflow: hidden;
   box-sizing: border-box;
   width: 100%;
@@ -47,6 +48,12 @@
 @media (width >= 40rem) {
   .rc_e12d7f_1 {
     padding: 2.5rem;
+  }
+}
+
+@supports (anchor-scope: --counter-control) {
+  .rc_e12d7f_1 {
+    anchor-scope: --counter-control;
   }
 }
 
@@ -115,12 +122,14 @@
 }
 
 .rc_e12d7f_8 {
+  position: relative;
   min-height: 2.75rem;
   padding-inline: var(--rc_4n84x0);
   color: var(--rc_ddsy7n);
   font-family: inherit;
   font-size: 0.9375rem;
   font-weight: bold;
+  text-wrap-mode: nowrap;
   background: var(--rc_jbjej6);
   border: 1px solid;
   border-color: var(--rc_jbjej6);
@@ -143,6 +152,13 @@
 
 .rc_e12d7f_8:active {
   transform: translateY(0);
+}
+
+@supports (anchor-name: --counter-control) {
+  .rc_e12d7f_8 {
+    anchor-name: --counter-control;
+    transition-behavior: allow-discrete;
+  }
 }
 
 .rc_e12d7f_9 {

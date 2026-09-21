@@ -40,7 +40,7 @@ Create styles directly in `Component.res`:
 module Styles = {
   let button = Css.style({
     display: InlineFlex,
-    color: "white",
+    color: Named("white"),
   })
 }
 ```
@@ -81,7 +81,7 @@ Variable references can be consumed directly from any stylesheet module:
 ```rescript
 let button = Css.style({
   background: Vars.brand,
-  color: Vars.onBrand,
+  color: Var(Vars.onBrand),
   padding: Var(Vars.spaceMd),
 })
 ```
@@ -95,7 +95,7 @@ let alternate = Css.style({
     (Vars.onBrand, "#042f2e"),
   ],
   background: Vars.brand,
-  color: Vars.onBrand,
+  color: Var(Vars.onBrand),
   padding: Rem(1.0),
 })
 ```
@@ -116,17 +116,18 @@ let box = Css.style({
 
 The API covers common layout, logical sizing and spacing, flexbox, grid, typography, borders,
 backgrounds, effects, animation, scrolling, tables, lists, and interaction properties. Finite CSS
-keywords use contextual variants while compound values remain strings:
+keywords and common compound values use contextual variants, while shorthands and open grammars
+remain strings:
 
 ```rescript
 let panel = Css.style({
   display: Grid,
-  gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
+  gridTemplateColumns: Raw("repeat(auto-fit, minmax(16rem, 1fr))"),
   alignItems: Center,
   gap: Rem(1.0),
   overflow: Hidden,
   borderStyle: Solid,
-  borderRadius: Px(8),
+  borderRadius: Raw("8px"),
   fontWeight: Weight(600),
   lineHeight: Number(1.5),
   cursor: Pointer,
@@ -157,7 +158,7 @@ module Styles = {
     background: Vars.surface,
     padding: Var(Vars.spaceMd),
     h1: Css.style({
-      color: Vars.brand,
+      color: Var(Vars.brand),
     }),
   })
 }
@@ -185,7 +186,7 @@ Common elements, states, and pseudo-elements can be nested the same way:
 let button = Css.class({
   cursor: Pointer,
   hover: Css.style({
-    transform: "translateY(-1px)",
+    transform: TranslateY(Px(-1)),
   }),
   focusVisible: Css.style({
     outline: "2px solid currentColor",
@@ -208,7 +209,9 @@ let layout = Css.class({
   media: [
     Css.media(
       ~query="(width >= 48rem)",
-      Css.style({gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}),
+      Css.style({
+        gridTemplateColumns: Raw("repeat(2, minmax(0, 1fr))"),
+      }),
     ),
   ],
   supports: [

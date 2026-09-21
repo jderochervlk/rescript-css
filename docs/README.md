@@ -14,11 +14,24 @@ names.
   queries, feature queries, and container queries.
 - [Releasing](releasing.md): package verification, the first manual publish, and automated releases.
 
+## Implementation Plans
+
+- [CSS surface expansion plans](plans/README.md): coordinated handoff documents for at-rules,
+  global styles, modern properties, and richer values.
+
 ## API At A Glance
 
 ```rescript
 let className = Css.style({...})
 let className = Css.class({...})
+let animationName = Css.keyframes([Css.frame(~at="from", {...}), Css.frame(~at="to", {...})])
+let family = Css.fontFace({family: "Inter", src: [Css.fontSource(~url="/inter.woff2")]})
+let _ = Css.registerProperty({name: "--progress", syntax: "<number>", inherits: false, initialValue: "0"})
+let _ = Css.scope(~root=".article", ~selector=":scope > h2", {...})
+let _ = Css.page(~selector=":first", [("size", "A4")])
+
+let _ = Css.layerOrder(["reset", "base", "components"])
+let layeredClass = Css.class(~layer=Css.namedLayer("components"), {...})
 
 let token = Css.var("initial value")
 let _ = Css.registerVars([token])

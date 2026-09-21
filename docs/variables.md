@@ -32,11 +32,12 @@ properties use scoped hashes.
 
 ## Consume Variables
 
-String-valued properties accept variable references directly:
+String-valued properties accept variable references directly. Wrap references in the contextual
+`Var` constructor when the property uses a structured value family:
 
 ```rescript
 let button = Css.style({
-  color: Vars.onBrand,
+  color: Var(Vars.onBrand),
   background: Vars.brand,
 })
 ```
@@ -59,7 +60,7 @@ let alternate = Css.style({
     (Vars.brand, "#2dd4bf"),
     (Vars.onBrand, "#042f2e"),
   ],
-  color: Vars.onBrand,
+  color: Var(Vars.onBrand),
   background: Vars.brand,
 })
 ```

@@ -2,17 +2,24 @@ module Styles = {
   let page = Css.class({
     background: Vars.surface,
     boxSizing: BorderBox,
-    color: Vars.text,
+    color: Var(Vars.text),
     fontFamily: "Inter, system-ui, sans-serif",
     minHeight: Dvh(100.0),
     width: Percent(100.0),
     padding: Rem(2.0),
     margin: Auto,
     h1: Css.style({
-      color: Vars.brand,
+      color: Var(Vars.brand),
       fontSize: Em(1.75),
       fontWeight: Bold,
       marginBlockStart: Zero,
+      textWrap: Balance,
+    }),
+    svg: Css.style({
+      fill: Color(CurrentColor),
+      stroke: Color(Var(Vars.brand)),
+      strokeLinecap: Round,
+      vectorEffect: NonScalingStroke,
     }),
     selectors: [
       (

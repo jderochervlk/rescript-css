@@ -48,9 +48,9 @@ module Styles = {
     alignItems: Center,
     gap: Rem(0.5),
     padding: Px(12),
-    color: "white",
+    color: Named("white"),
     background: "#0f766e",
-    borderRadius: Px(6),
+    borderRadius: Raw("6px"),
     cursor: Pointer,
   })
 }
@@ -73,6 +73,27 @@ Framework-free code works the same way:
 let html = `<button class="${Styles.button}">Save</button>`
 ```
 
+## Add Global Styles
+
+Use `Css.global` for document-level rules that do not need a generated class:
+
+```rescript
+let _ = Css.global(~selector="*, *::before, *::after", {
+  boxSizing: BorderBox,
+})
+
+let _ = Css.global(~selector="body", {
+  margin: Zero,
+  color: Var(Vars.text),
+  background: Vars.canvas,
+  fontFamily: "Inter, system-ui, sans-serif",
+})
+```
+
+Global rules use the same typed style record as `Css.style`. Keep them at module scope; the plugin
+collects them into an ordinary generated stylesheet and removes the build-time calls and unused
+runtime import from the compiled module.
+
 ## Generated Output
 
 The plugin emits a neighboring stylesheet and replaces the static style call with its generated
@@ -91,9 +112,10 @@ class name:
 }
 ```
 
-Keep style declarations at module scope and assign each top-level `Css.style` or `Css.class` call
-directly to a `let` binding. This gives the plugin a stable build-time declaration to collect and
-inline.
+Keep style and animation declarations at module scope and assign each top-level `Css.style`,
+`Css.class`, `Css.keyframes`, or `Css.fontFace` call directly to a `let` binding. Keep `Css.global`,
+`Css.layerOrder`, `Css.registerProperty`, `Css.scope`, and `Css.page` calls at module scope as well.
+This gives the plugin stable build-time declarations to collect, inline, or remove.
 
 ## Build And Develop
 

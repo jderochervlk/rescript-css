@@ -3,11 +3,22 @@
   --rc_4pjwda: #164e63;
   display: grid;
   max-width: 60ch;
+  contain-intrinsic-inline-size: auto 60ch;
   padding: var(--rc_r1kdke);
   gap: 1rem;
   color: var(--rc_4pjwda);
   line-height: 1.5;
+  text-wrap: pretty;
   background: var(--rc_yc142e);
   border: 1px solid currentColor;
   border-radius: 8px;
+  border-start-start-radius: 1.5rem;
+  scroll-margin-block: 1rem;
+  container: example-card / inline-size;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  .rc_19ciu9w_0 {
+    interpolate-size: allow-keywords;
+  }
 }

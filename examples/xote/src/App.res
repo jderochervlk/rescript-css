@@ -1,8 +1,25 @@
 module Styles = {
+  let fractionalTrack: CssValue.TrackBreadth.t = switch CssValue.TrackFraction.make(1.0) {
+  | Ok(value) => Fraction(value)
+  | Error(_) => Raw("1fr")
+  }
+
+  let repeatedTracks: CssValue.TrackList.t = switch (
+    CssValue.TrackLength.make(Zero),
+    CssValue.TrackFraction.make(1.0),
+    CssValue.RepeatCount.make(3),
+  ) {
+  | (Ok(minimum), Ok(maximum), Ok(count)) =>
+    Tracks([
+      Repeat(count, [RepeatBreadth(Minmax(MinimumLength(minimum), MaximumFraction(maximum)))]),
+    ])
+  | _ => Raw("repeat(3, minmax(0, 1fr))")
+  }
+
   let page = Css.class({
     background: Vars.canvas,
     boxSizing: BorderBox,
-    color: Vars.text,
+    color: Var(Vars.text),
     display: Grid,
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
     minHeight: Dvh(100.0),
@@ -11,7 +28,7 @@ module Styles = {
     width: Percent(100.0),
     selection: Css.style({
       background: Vars.accent,
-      color: Vars.onBrand,
+      color: Var(Vars.onBrand),
     }),
     media: [
       Css.media(
@@ -26,8 +43,11 @@ module Styles = {
   let panel = Css.class({
     background: Vars.surface,
     border: "1px solid",
-    borderColor: Vars.border,
-    borderRadius: Px(8),
+    borderColor: Var(Vars.border),
+    borderRadius: switch CssValue.BorderRadius.single(Px(8)) {
+    | Ok(radius) => radius
+    | Error(_) => Raw("8px")
+    },
     boxShadow: "0 1.5rem 4rem rgb(23 35 33 / 12%)",
     boxSizing: BorderBox,
     display: Grid,
@@ -35,6 +55,7 @@ module Styles = {
     maxWidth: Ch(58.0),
     overflow: Hidden,
     padding: Rem(1.5),
+    position: Relative,
     width: Percent(100.0),
     h1: Css.style({
       fontSize: Rem(2.25),
@@ -51,10 +72,16 @@ module Styles = {
         }),
       ),
     ],
+    supports: [
+      Css.supports(
+        ~condition="(anchor-scope: --counter-control)",
+        Css.style({anchorScope: "--counter-control"}),
+      ),
+    ],
   })
 
   let eyebrow = Css.style({
-    color: Vars.brand,
+    color: Var(Vars.brand),
     fontSize: Rem(0.75),
     fontWeight: Bold,
     letterSpacing: Em(0.1),
@@ -63,7 +90,7 @@ module Styles = {
   })
 
   let intro = Css.style({
-    color: Vars.muted,
+    color: Var(Vars.muted),
     fontSize: Rem(1.0),
     lineHeight: Number(1.6),
     margin: Zero,
@@ -74,11 +101,14 @@ module Styles = {
     vars: [(Vars.surface, "#087f73"), (Vars.text, "#ffffff"), (Vars.muted, "#d4efeb")],
     alignItems: Center,
     background: Vars.surface,
-    borderRadius: Px(6),
-    color: Vars.text,
+    borderRadius: switch CssValue.BorderRadius.single(Px(6)) {
+    | Ok(radius) => radius
+    | Error(_) => Raw("6px")
+    },
+    color: Var(Vars.text),
     display: Grid,
     gap: Rem(0.25),
-    gridTemplateColumns: "1fr auto",
+    gridTemplateColumns: Tracks([Breadth(fractionalTrack), Breadth(Auto)]),
     padding: Rem(1.25),
   })
 
@@ -89,14 +119,14 @@ module Styles = {
   })
 
   let metric = Css.class({
-    color: Vars.muted,
+    color: Var(Vars.muted),
     display: Grid,
     fontSize: Rem(0.8125),
     gap: Rem(0.25),
     justifyItems: End,
     textTransform: Uppercase,
     span: Css.style({
-      color: Vars.text,
+      color: Var(Vars.text),
       fontSize: Rem(1.125),
       fontWeight: Bold,
     }),
@@ -105,12 +135,12 @@ module Styles = {
   let controls = Css.class({
     display: Grid,
     gap: Rem(0.75),
-    gridTemplateColumns: "1fr",
+    gridTemplateColumns: Tracks([Breadth(fractionalTrack)]),
     media: [
       Css.media(
         ~query="(width >= 30rem)",
         Css.style({
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gridTemplateColumns: repeatedTracks,
         }),
       ),
     ],
@@ -120,36 +150,50 @@ module Styles = {
     appearance: None,
     background: Vars.brand,
     border: "1px solid",
-    borderColor: Vars.brand,
-    borderRadius: Px(6),
-    color: Vars.onBrand,
+    borderColor: Var(Vars.brand),
+    borderRadius: switch CssValue.BorderRadius.single(Px(6)) {
+    | Ok(radius) => radius
+    | Error(_) => Raw("6px")
+    },
+    color: Var(Vars.onBrand),
     cursor: Pointer,
     fontFamily: "inherit",
     fontSize: Rem(0.9375),
     fontWeight: Bold,
     minHeight: Rem(2.75),
     paddingInline: Var(Vars.spaceMd),
+    position: Relative,
+    textWrapMode: NoWrap,
     transition: "background-color 150ms ease, border-color 150ms ease, transform 150ms ease",
     hover: Css.style({
       background: Vars.accent,
-      borderColor: Vars.accent,
-      transform: "translateY(-1px)",
+      borderColor: Var(Vars.accent),
+      transform: TranslateY(Px(-1)),
     }),
     focusVisible: Css.style({
       outline: "3px solid rgb(232 93 74 / 35%)",
       outlineOffset: Px(2),
     }),
     active: Css.style({
-      transform: "translateY(0)",
+      transform: TranslateY(Zero),
     }),
+    supports: [
+      Css.supports(
+        ~condition="(anchor-name: --counter-control)",
+        Css.style({anchorName: "--counter-control", transitionBehavior: AllowDiscrete}),
+      ),
+    ],
   })
 
   let secondaryButton = Css.class({
     background: Vars.surface,
     border: "1px solid",
-    borderColor: Vars.border,
-    borderRadius: Px(6),
-    color: Vars.text,
+    borderColor: Var(Vars.border),
+    borderRadius: switch CssValue.BorderRadius.single(Px(6)) {
+    | Ok(radius) => radius
+    | Error(_) => Raw("6px")
+    },
+    color: Var(Vars.text),
     cursor: Pointer,
     fontFamily: "inherit",
     fontSize: Rem(0.9375),
@@ -159,7 +203,7 @@ module Styles = {
     transition: "background-color 150ms ease, border-color 150ms ease",
     hover: Css.style({
       background: Vars.canvas,
-      borderColor: Vars.brand,
+      borderColor: Var(Vars.brand),
     }),
     focusVisible: Css.style({
       outline: "3px solid rgb(8 127 115 / 30%)",

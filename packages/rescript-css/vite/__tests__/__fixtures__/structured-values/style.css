@@ -1,0 +1,9 @@
+.rc_1gwv5hb_0 {
+  grid-template-columns: [main-start] repeat(auto-fit, minmax(12rem, 1fr)) [main-end];
+  color: oklch(0.42 0.09 210);
+  background-color: #f8fafc;
+  transform: translateY(-1px) rotate(2.5deg);
+  animation-delay: -0.25s;
+  animation-duration: 180.5ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

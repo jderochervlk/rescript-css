@@ -1,0 +1,30 @@
+:root {
+  --rc_183f6em: #172321;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.rc_fixture_0 {
+  background: white;
+}
+
+body {
+  color: var(--rc_183f6em);
+  margin: 0;
+}
+
+body a {
+  color: var(--rc_183f6em);
+}
+
+body::selection {
+  background: teal;
+}
+
+@media (width >= 48rem) {
+  body {
+    font-size: 1.125rem;
+  }
+}

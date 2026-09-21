@@ -12,7 +12,7 @@ module Styles = {
     gap: Rem(1.0),
     h1: Css.style({
       marginBlock: Zero,
-      color: Vars.brand,
+      color: Var(Vars.brand),
       fontSize: Rem(2.0),
     }),
     p: Css.style({
@@ -55,7 +55,7 @@ State and pseudo-element fields rebase against the owning class:
 let button = Css.class({
   cursor: Pointer,
   hover: Css.style({
-    transform: "translateY(-1px)",
+    transform: TranslateY(Px(-1)),
   }),
   focusVisible: Css.style({
     outline: "2px solid currentColor",
@@ -99,11 +99,13 @@ Use `Css.media` inside the `media` field:
 ```rescript
 let layout = Css.class({
   display: Grid,
-  gridTemplateColumns: "1fr",
+  gridTemplateColumns: Raw("1fr"),
   media: [
     Css.media(
       ~query="(width >= 48rem)",
-      Css.style({gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}),
+      Css.style({
+        gridTemplateColumns: Raw("repeat(2, minmax(0, 1fr))"),
+      }),
     ),
   ],
 })
@@ -140,7 +142,12 @@ let card = Css.class({
   containerQueries: [
     Css.container(
       ~query="(width >= 30rem)",
-      Css.style({gridTemplateColumns: "10rem 1fr"}),
+      Css.style({
+        gridTemplateColumns: Tracks([
+          Breadth(Length(Rem(10.0))),
+          Breadth(Raw("1fr")),
+        ]),
+      }),
     ),
   ],
 })
@@ -148,3 +155,93 @@ let card = Css.class({
 
 Conditions are passed as CSS strings so new query syntax remains available without a library
 release.
+
+## Global Selectors
+
+`Css.global` supports the same nested selectors and conditional fields as `Css.class`, but rebases
+them against the supplied selector instead of a generated class:
+
+```rescript
+let _ = Css.global(~selector="body", {
+  a: Css.style({color: Var(Vars.brand)}),
+  selectors: [
+    ("&::selection", Css.style({background: Vars.brand, color: Var(Vars.onBrand)})),
+  ],
+  media: [
+    Css.media(
+      ~query="(width >= 48rem)",
+      Css.style({fontSize: Rem(1.125)}),
+    ),
+  ],
+})
+```
+
+This emits `body a`, `body::selection`, and a `body` rule inside the media query. Selector lists and
+open selector syntax remain strings, so selectors such as `html, body` and `*, *::before, *::after`
+do not require library support.
+
+## Scoped Styles
+
+`Css.scope` wraps an ordinary style definition in `@scope`. The root and optional limit form the
+scope boundary, while `~selector` identifies the rule inside it:
+
+```rescript
+let _ = Css.scope(
+  ~root=".article",
+  ~limit=".comments",
+  ~selector=":scope > h2",
+  {
+    marginBlockStart: Zero,
+    a: Css.style({color: Var(Vars.brand)}),
+    media: [
+      Css.media(~query="(width >= 48rem)", Css.style({fontSize: Rem(1.25)})),
+    ],
+  },
+)
+```
+
+The body supports the same declarations, variables, nested selectors, and conditional rules as
+`Css.global`. Scope selectors are checked for unsafe rule boundaries and balanced brackets,
+parentheses, and quotes before CSS is collected. Scoped rules may also opt into a cascade layer.
+
+## Cascade Layers
+
+Declare a deterministic cascade order with `Css.layerOrder`, then opt individual registrations into
+named layers:
+
+```rescript
+let _ = Css.layerOrder(["reset", "tokens", "base", "framework.components"])
+
+let _ = Css.global(
+  ~selector="body",
+  ~layer=Css.namedLayer("base"),
+  {margin: Zero},
+)
+
+let button = Css.class(
+  ~layer=Css.namedLayer("framework.components"),
+  {
+    display: InlineFlex,
+    media: [
+      Css.media(
+        ~query="(width >= 48rem)",
+        Css.style({padding: Px(12)}),
+      ),
+    ],
+  },
+)
+```
+
+`Css.style`, `Css.class`, `Css.global`, `Css.keyframes`, and `Css.fontFace` all accept the same
+optional `~layer` argument. Layer names are validated as dot-separated ASCII CSS identifiers. Calls
+without `~layer` remain unlayered.
+
+Use `~layer=Css.anonymousLayer` for a one-off anonymous layer. Each registration creates a distinct
+anonymous layer, even when two calls are adjacent, because anonymous layers cannot be referenced or
+reopened. Named registrations are grouped only when they are adjacent; the plugin never reorders
+rules to merge layer blocks.
+
+The layer order statement is emitted before registered variables and rules. Repeating the same
+order is harmless, while conflicting orders in one stylesheet module fail extraction. The layer is
+registration metadata supplied as an optional argument rather than a field in the style record;
+this keeps it out of nested style definitions and applies the same API to every emitted rule kind.

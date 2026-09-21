@@ -40,7 +40,7 @@ module Styles = {
   let button = Css.style({
     display: InlineFlex,
     padding: Px(16),
-    color: "white",
+    color: Named("white"),
     background: "#0f766e",
   })
 }

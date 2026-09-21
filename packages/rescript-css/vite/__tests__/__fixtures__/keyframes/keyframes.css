@@ -1,0 +1,30 @@
+@keyframes rc_kf_gtsphw {
+  from {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.4;
+  }
+  60%, 80% {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.rc_fixture_0 {
+  animation-name: rc_kf_gtsphw;
+  animation-duration: 180ms;
+}
+
+@keyframes rc_kf_1bo7tmy {
+  from {
+    --progress: 0;
+    transform: scale(1);
+  }
+  to {
+    --progress: 1;
+    transform: scale(1.05);
+  }
+}

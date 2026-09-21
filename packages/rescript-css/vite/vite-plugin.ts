@@ -14,6 +14,52 @@ const stylesModuleExportPattern = /^(export \{\n(?:  [A-Za-z_$][\w$]*,\n)*)  Sty
 type CollectedStyle = Readonly<{
   className: string;
   cssText: string;
+  ruleOrder: number;
+}>;
+
+type CollectedLayer =
+  | Readonly<{ kind: 'unlayered'; name: '' }>
+  | Readonly<{ kind: 'anonymous'; name: '' }>
+  | Readonly<{ kind: 'named'; name: string }>;
+
+type CollectedRule = Readonly<{
+  order: number;
+  cssText: string;
+  layer: CollectedLayer;
+}>;
+
+type CollectedKeyframes = Readonly<{
+  temporaryName: string;
+  ruleOrder: number;
+}>;
+
+type CollectedFontFace = Readonly<{
+  family: string;
+  ruleOrder: number;
+}>;
+
+type CollectedProperty = Readonly<{
+  name: string;
+  syntax: string;
+  inherits: boolean;
+  initialValue: string;
+  ruleOrder: number;
+}>;
+
+type CollectedScope = Readonly<{
+  root: string;
+  limit: string;
+  hasLimit: boolean;
+  selector: string;
+  bodyCssText: string;
+  ruleOrder: number;
+}>;
+
+type CollectedPage = Readonly<{
+  selector: string;
+  hasSelector: boolean;
+  descriptors: readonly (readonly [string, string])[];
+  ruleOrder: number;
 }>;
 
 type CollectedVariable = Readonly<{
@@ -25,6 +71,14 @@ type CollectedVariable = Readonly<{
 type StyleCollector = Readonly<{
   scope: string;
   styles: CollectedStyle[];
+  rules: CollectedRule[];
+  keyframes: CollectedKeyframes[];
+  fontFaces: CollectedFontFace[];
+  properties: CollectedProperty[];
+  scopes: CollectedScope[];
+  pages: CollectedPage[];
+  layerOrder: string[];
+  nextRuleOrder: number;
   variables: CollectedVariable[];
   rootCssText: string;
 }>;
@@ -45,6 +99,17 @@ type VariableReplacement = Readonly<{
   reference: string;
 }>;
 
+type KeyframesReplacement = Readonly<{
+  declaration: StyleDeclaration;
+  temporaryName: string;
+  name: string;
+}>;
+
+type FontFaceReplacement = Readonly<{
+  declaration: StyleDeclaration;
+  family: string;
+}>;
+
 type SourceReplacement = Readonly<{
   start: number;
   end: number;
@@ -58,12 +123,29 @@ type InlinedStyleClassNames = Readonly<{
 
 type CollectedStylesheet = Readonly<{
   styles: readonly CollectedStyle[];
+  rules: readonly CollectedRule[];
+  keyframes: readonly CollectedKeyframes[];
+  fontFaces: readonly CollectedFontFace[];
+  properties: readonly CollectedProperty[];
+  scopes: readonly CollectedScope[];
+  pages: readonly CollectedPage[];
+  layerOrder: readonly string[];
   variables: readonly CollectedVariable[];
   rootCssText: string;
 }>;
 
+type ScopedKeyframes = Readonly<{
+  stylesheet: CollectedStylesheet;
+  replacements: readonly KeyframesReplacement[];
+}>;
+
 export type CssModuleLoadFailure = Readonly<{
   _tag: 'CssModuleLoadFailure';
+  message: string;
+}>;
+
+export type CssSourceAnalysisFailure = Readonly<{
+  _tag: 'CssSourceAnalysisFailure';
   message: string;
 }>;
 
@@ -90,10 +172,94 @@ export type ReScriptConfigFailure = Readonly<{
   message: string;
 }>;
 
-const callsStylesheetApi = (source: string, moduleBinding: string): boolean =>
-  ['style', '$$class', '$$var', 'registerVars'].some((method) =>
-    source.includes(`${moduleBinding}.${method}(`),
-  );
+type JavaScriptScanMode =
+  | 'Code'
+  | 'SingleQuote'
+  | 'DoubleQuote'
+  | 'Template'
+  | 'LineComment'
+  | 'BlockComment';
+
+const codeOnlySource = (source: string): string => {
+  const characters = source.split('');
+  let mode: JavaScriptScanMode = 'Code';
+
+  const mask = (index: number): void => {
+    if (characters[index] !== '\n' && characters[index] !== '\r') {
+      characters[index] = ' ';
+    }
+  };
+
+  for (let index = 0; index < characters.length; index += 1) {
+    const character = source[index];
+    const nextCharacter = source[index + 1];
+
+    if (mode === 'LineComment') {
+      if (character === '\n' || character === '\r') {
+        mode = 'Code';
+      } else {
+        mask(index);
+      }
+    } else if (mode === 'BlockComment') {
+      mask(index);
+      if (character === '*' && nextCharacter === '/') {
+        mask(index + 1);
+        index += 1;
+        mode = 'Code';
+      }
+    } else if (mode !== 'Code') {
+      mask(index);
+      if (character === '\\') {
+        mask(index + 1);
+        index += 1;
+      } else if (
+        (mode === 'SingleQuote' && character === "'") ||
+        (mode === 'DoubleQuote' && character === '"') ||
+        (mode === 'Template' && character === '`')
+      ) {
+        mode = 'Code';
+      }
+    } else if (character === '/' && nextCharacter === '/') {
+      mask(index);
+      mask(index + 1);
+      index += 1;
+      mode = 'LineComment';
+    } else if (character === '/' && nextCharacter === '*') {
+      mask(index);
+      mask(index + 1);
+      index += 1;
+      mode = 'BlockComment';
+    } else if (character === "'") {
+      mask(index);
+      mode = 'SingleQuote';
+    } else if (character === '"') {
+      mask(index);
+      mode = 'DoubleQuote';
+    } else if (character === '`') {
+      mask(index);
+      mode = 'Template';
+    }
+  }
+
+  return characters.join('');
+};
+
+const callsStylesheetApi = (source: string, moduleBinding: string): boolean => {
+  const code = codeOnlySource(source);
+  return [
+    'style',
+    '$$class',
+    '$$var',
+    'registerVars',
+    'global',
+    'keyframes',
+    'fontFace',
+    'layerOrder',
+    'registerProperty',
+    'scope',
+    'page',
+  ].some((method) => code.includes(`${moduleBinding}.${method}(`));
+};
 
 const escapeRegularExpression = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
@@ -122,12 +288,18 @@ const cssModuleImportPatternFor = (compiledModuleSuffix: string): RegExp => {
   );
 };
 
-const cssModuleBindingFor = (source: string, cssModuleImportPattern: RegExp): string | undefined =>
-  [...source.matchAll(cssModuleImportPattern)]
+const cssModuleBindingFor = (
+  source: string,
+  cssModuleImportPattern: RegExp,
+): string | undefined => {
+  const code = codeOnlySource(source);
+  return [...source.matchAll(cssModuleImportPattern)]
+    .filter((match) => match.index !== undefined && code.startsWith('import', match.index))
     .map((match) => match[1])
     .find((moduleBinding) =>
       moduleBinding === undefined ? false : callsStylesheetApi(source, moduleBinding),
     );
+};
 
 const cssModuleImportPatternForBinding = (
   compiledModuleSuffix: string,
@@ -275,7 +447,238 @@ const isCollectedStyle = (value: unknown): value is CollectedStyle =>
   'className' in value &&
   typeof value['className'] === 'string' &&
   'cssText' in value &&
-  typeof value['cssText'] === 'string';
+  typeof value['cssText'] === 'string' &&
+  'ruleOrder' in value &&
+  typeof value['ruleOrder'] === 'number' &&
+  Number.isInteger(value['ruleOrder']) &&
+  value['ruleOrder'] >= 0;
+
+const layerNamePattern =
+  /^(?:--[A-Za-z0-9_-]+|-?[A-Za-z_][A-Za-z0-9_-]*)(?:\.(?:--[A-Za-z0-9_-]+|-?[A-Za-z_][A-Za-z0-9_-]*))*$/u;
+const cssWideKeywords = new Set(['initial', 'inherit', 'unset', 'revert', 'revert-layer']);
+const isValidLayerName = (name: string): boolean =>
+  layerNamePattern.test(name) &&
+  name.split('.').every((segment) => !cssWideKeywords.has(segment.toLowerCase()));
+
+const isCollectedLayer = (value: unknown): value is CollectedLayer => {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    !('kind' in value) ||
+    typeof value['kind'] !== 'string' ||
+    !('name' in value) ||
+    typeof value['name'] !== 'string'
+  ) {
+    return false;
+  }
+
+  return value['kind'] === 'named'
+    ? isValidLayerName(value['name'])
+    : (value['kind'] === 'unlayered' || value['kind'] === 'anonymous') && value['name'] === '';
+};
+
+const isCollectedRule = (value: unknown): value is CollectedRule =>
+  typeof value === 'object' &&
+  value !== null &&
+  'order' in value &&
+  typeof value['order'] === 'number' &&
+  Number.isInteger(value['order']) &&
+  value['order'] >= 0 &&
+  'cssText' in value &&
+  typeof value['cssText'] === 'string' &&
+  'layer' in value &&
+  isCollectedLayer(value['layer']);
+
+const isCollectedKeyframes = (value: unknown): value is CollectedKeyframes =>
+  typeof value === 'object' &&
+  value !== null &&
+  'temporaryName' in value &&
+  typeof value['temporaryName'] === 'string' &&
+  'ruleOrder' in value &&
+  typeof value['ruleOrder'] === 'number' &&
+  Number.isInteger(value['ruleOrder']) &&
+  value['ruleOrder'] >= 0;
+
+const isCollectedFontFace = (value: unknown): value is CollectedFontFace =>
+  typeof value === 'object' &&
+  value !== null &&
+  'family' in value &&
+  typeof value['family'] === 'string' &&
+  'ruleOrder' in value &&
+  typeof value['ruleOrder'] === 'number' &&
+  Number.isInteger(value['ruleOrder']) &&
+  value['ruleOrder'] >= 0;
+
+const customPropertyNamePattern = /^--[A-Za-z_][A-Za-z0-9_-]*$/u;
+const pageSelectorPattern =
+  /^(?:(?:--[A-Za-z0-9_-]+|-?[A-Za-z_][A-Za-z0-9_-]*))?(?::(?:left|right|first|blank))*$/u;
+const descriptorNamePattern = /^(?:--[A-Za-z0-9_-]+|-?[A-Za-z_][A-Za-z0-9_-]*)$/u;
+const unsafeRuleBoundaryPattern = /[;{}\n\r\f]|\/\*|\*\//u;
+
+const isSafeDescriptorValue = (value: string): boolean =>
+  value.trim().length > 0 && !unsafeRuleBoundaryPattern.test(value);
+
+const isBalancedSelectorAt = (
+  value: string,
+  index: number,
+  parentheses: number,
+  brackets: number,
+  quote: '"' | "'" | undefined,
+): boolean => {
+  if (index >= value.length) {
+    return parentheses === 0 && brackets === 0 && quote === undefined;
+  }
+
+  const character = value[index];
+  if (character === '\\') {
+    return index + 1 < value.length
+      ? isBalancedSelectorAt(value, index + 2, parentheses, brackets, quote)
+      : false;
+  }
+
+  if (quote !== undefined) {
+    return isBalancedSelectorAt(
+      value,
+      index + 1,
+      parentheses,
+      brackets,
+      character === quote ? undefined : quote,
+    );
+  }
+
+  if (character === '"' || character === "'") {
+    return isBalancedSelectorAt(value, index + 1, parentheses, brackets, character);
+  }
+
+  if (character === '(' || character === '[') {
+    return isBalancedSelectorAt(
+      value,
+      index + 1,
+      parentheses + (character === '(' ? 1 : 0),
+      brackets + (character === '[' ? 1 : 0),
+      quote,
+    );
+  }
+
+  if (character === ')' || character === ']') {
+    const nextParentheses = parentheses - (character === ')' ? 1 : 0);
+    const nextBrackets = brackets - (character === ']' ? 1 : 0);
+    return (
+      nextParentheses >= 0 &&
+      nextBrackets >= 0 &&
+      isBalancedSelectorAt(value, index + 1, nextParentheses, nextBrackets, quote)
+    );
+  }
+
+  return isBalancedSelectorAt(value, index + 1, parentheses, brackets, quote);
+};
+
+const isSafeSelector = (value: string): boolean => {
+  const normalized = value.trim();
+  return (
+    normalized.length > 0 &&
+    !normalized.startsWith('@') &&
+    !unsafeRuleBoundaryPattern.test(normalized) &&
+    isBalancedSelectorAt(normalized, 0, 0, 0, undefined)
+  );
+};
+
+const isBalancedCssAt = (
+  value: string,
+  index: number,
+  braces: number,
+  quote: '"' | "'" | undefined,
+): boolean => {
+  if (index >= value.length) {
+    return braces === 0 && quote === undefined;
+  }
+
+  const character = value[index];
+  if (character === '\\') {
+    return index + 1 < value.length ? isBalancedCssAt(value, index + 2, braces, quote) : false;
+  }
+
+  if (quote !== undefined) {
+    return isBalancedCssAt(value, index + 1, braces, character === quote ? undefined : quote);
+  }
+
+  if (character === '"' || character === "'") {
+    return isBalancedCssAt(value, index + 1, braces, character);
+  }
+
+  if (value.startsWith('/*', index)) {
+    const commentEnd = value.indexOf('*/', index + 2);
+    return commentEnd >= 0 && isBalancedCssAt(value, commentEnd + 2, braces, quote);
+  }
+
+  const nextBraces = braces + (character === '{' ? 1 : character === '}' ? -1 : 0);
+  return nextBraces >= 0 && isBalancedCssAt(value, index + 1, nextBraces, quote);
+};
+
+const hasRuleOrder = (value: object): boolean =>
+  'ruleOrder' in value &&
+  typeof value['ruleOrder'] === 'number' &&
+  Number.isInteger(value['ruleOrder']) &&
+  value['ruleOrder'] >= 0;
+
+const isCollectedProperty = (value: unknown): value is CollectedProperty =>
+  typeof value === 'object' &&
+  value !== null &&
+  'name' in value &&
+  typeof value['name'] === 'string' &&
+  customPropertyNamePattern.test(value['name']) &&
+  'syntax' in value &&
+  typeof value['syntax'] === 'string' &&
+  isSafeDescriptorValue(value['syntax']) &&
+  'inherits' in value &&
+  typeof value['inherits'] === 'boolean' &&
+  'initialValue' in value &&
+  typeof value['initialValue'] === 'string' &&
+  isSafeDescriptorValue(value['initialValue']) &&
+  hasRuleOrder(value);
+
+const isCollectedScope = (value: unknown): value is CollectedScope =>
+  typeof value === 'object' &&
+  value !== null &&
+  'root' in value &&
+  typeof value['root'] === 'string' &&
+  isSafeSelector(value['root']) &&
+  'limit' in value &&
+  typeof value['limit'] === 'string' &&
+  'hasLimit' in value &&
+  typeof value['hasLimit'] === 'boolean' &&
+  (value['hasLimit'] ? isSafeSelector(value['limit']) : value['limit'] === '') &&
+  'selector' in value &&
+  typeof value['selector'] === 'string' &&
+  isSafeSelector(value['selector']) &&
+  'bodyCssText' in value &&
+  typeof value['bodyCssText'] === 'string' &&
+  value['bodyCssText'].length > 0 &&
+  isBalancedCssAt(value['bodyCssText'], 0, 0, undefined) &&
+  hasRuleOrder(value);
+
+const isPageDescriptor = (value: unknown): value is readonly [string, string] =>
+  Array.isArray(value) &&
+  value.length === 2 &&
+  typeof value[0] === 'string' &&
+  descriptorNamePattern.test(value[0]) &&
+  typeof value[1] === 'string' &&
+  isSafeDescriptorValue(value[1]);
+
+const isCollectedPage = (value: unknown): value is CollectedPage =>
+  typeof value === 'object' &&
+  value !== null &&
+  'selector' in value &&
+  typeof value['selector'] === 'string' &&
+  'hasSelector' in value &&
+  typeof value['hasSelector'] === 'boolean' &&
+  (value['hasSelector']
+    ? value['selector'].length > 0 && pageSelectorPattern.test(value['selector'])
+    : value['selector'] === '') &&
+  'descriptors' in value &&
+  Array.isArray(value['descriptors']) &&
+  value['descriptors'].every(isPageDescriptor) &&
+  hasRuleOrder(value);
 
 const isCollectedVariable = (value: unknown): value is CollectedVariable =>
   typeof value === 'object' &&
@@ -287,7 +690,7 @@ const isCollectedVariable = (value: unknown): value is CollectedVariable =>
   'initialValue' in value &&
   typeof value['initialValue'] === 'string';
 
-const isStyleCollector = (value: unknown): value is StyleCollector =>
+const isStyleCollectorShape = (value: unknown): value is StyleCollector =>
   typeof value === 'object' &&
   value !== null &&
   'scope' in value &&
@@ -295,21 +698,173 @@ const isStyleCollector = (value: unknown): value is StyleCollector =>
   'styles' in value &&
   Array.isArray(value['styles']) &&
   value['styles'].every(isCollectedStyle) &&
+  'rules' in value &&
+  Array.isArray(value['rules']) &&
+  value['rules'].every(isCollectedRule) &&
+  'keyframes' in value &&
+  Array.isArray(value['keyframes']) &&
+  value['keyframes'].every(isCollectedKeyframes) &&
+  'fontFaces' in value &&
+  Array.isArray(value['fontFaces']) &&
+  value['fontFaces'].every(isCollectedFontFace) &&
+  'properties' in value &&
+  Array.isArray(value['properties']) &&
+  value['properties'].every(isCollectedProperty) &&
+  'scopes' in value &&
+  Array.isArray(value['scopes']) &&
+  value['scopes'].every(isCollectedScope) &&
+  'pages' in value &&
+  Array.isArray(value['pages']) &&
+  value['pages'].every(isCollectedPage) &&
+  'layerOrder' in value &&
+  Array.isArray(value['layerOrder']) &&
+  value['layerOrder'].every((name) => typeof name === 'string' && isValidLayerName(name)) &&
+  new Set(value['layerOrder']).size === value['layerOrder'].length &&
+  'nextRuleOrder' in value &&
+  typeof value['nextRuleOrder'] === 'number' &&
+  Number.isInteger(value['nextRuleOrder']) &&
+  value['nextRuleOrder'] >= 0 &&
   'variables' in value &&
   Array.isArray(value['variables']) &&
   value['variables'].every(isCollectedVariable) &&
   'rootCssText' in value &&
   typeof value['rootCssText'] === 'string';
 
+const hasStructuredRuleTopology = (collector: StyleCollector): boolean => {
+  const structuredOrders = [
+    ...collector.properties.map(({ ruleOrder }) => ruleOrder),
+    ...collector.scopes.map(({ ruleOrder }) => ruleOrder),
+    ...collector.pages.map(({ ruleOrder }) => ruleOrder),
+  ];
+  const uniqueStructuredOrders = new Set(structuredOrders);
+  const rulesByOrder = (order: number): readonly CollectedRule[] =>
+    collector.rules.filter((rule) => rule.order === order);
+
+  return (
+    uniqueStructuredOrders.size === structuredOrders.length &&
+    structuredOrders.every((order) => {
+      const rules = rulesByOrder(order);
+      return rules.length === 1 && rules[0]?.cssText === '';
+    }) &&
+    collector.rules.every(
+      (rule) => rule.cssText.length > 0 || uniqueStructuredOrders.has(rule.order),
+    )
+  );
+};
+
+const isStyleCollector = (value: unknown): value is StyleCollector =>
+  isStyleCollectorShape(value) && hasStructuredRuleTopology(value);
+
 const startCollection = (scope: string): void => {
-  const collector: StyleCollector = { scope, styles: [], variables: [], rootCssText: '' };
+  const collector: StyleCollector = {
+    scope,
+    styles: [],
+    rules: [],
+    keyframes: [],
+    fontFaces: [],
+    properties: [],
+    scopes: [],
+    pages: [],
+    layerOrder: [],
+    nextRuleOrder: 0,
+    variables: [],
+    rootCssText: '',
+  };
   Reflect.set(globalThis, Symbol.for(collectorSymbolName), collector);
 };
 
-const stylesheetFor = ({ styles, rootCssText }: CollectedStylesheet): string =>
-  [rootCssText, ...styles.map(({ cssText }) => cssText)]
+type CssRuleGroup =
+  | Readonly<{ _tag: 'Unlayered'; cssText: string }>
+  | Readonly<{ _tag: 'Layered'; layer: CollectedLayer; cssTexts: readonly string[] }>;
+
+const appendRuleGroup = (
+  groups: readonly CssRuleGroup[],
+  rule: CollectedRule,
+): readonly CssRuleGroup[] => {
+  if (rule.layer.kind === 'unlayered') {
+    return [...groups, { _tag: 'Unlayered', cssText: rule.cssText }];
+  }
+
+  const previous = groups.at(-1);
+  if (
+    rule.layer.kind === 'named' &&
+    previous?._tag === 'Layered' &&
+    previous.layer.kind === 'named' &&
+    previous.layer.name === rule.layer.name
+  ) {
+    return [
+      ...groups.slice(0, -1),
+      { ...previous, cssTexts: [...previous.cssTexts, rule.cssText] },
+    ];
+  }
+
+  return [...groups, { _tag: 'Layered', layer: rule.layer, cssTexts: [rule.cssText] }];
+};
+
+const indentCssText = (cssText: string): string =>
+  cssText
+    .split('\n')
+    .map((line) => (line.length === 0 ? line : `  ${line}`))
+    .join('\n');
+
+const cssTextForGroup = (group: CssRuleGroup): string => {
+  if (group._tag === 'Unlayered') {
+    return group.cssText;
+  }
+
+  const suffix = group.layer.kind === 'named' ? ` ${group.layer.name}` : '';
+  return `@layer${suffix} {\n${indentCssText(group.cssTexts.join('\n'))}}\n`;
+};
+
+const layerOrderCssText = (layerOrder: readonly string[]): string =>
+  layerOrder.length === 0 ? '' : `@layer ${layerOrder.join(', ')};\n`;
+
+const quoteCssString = (value: string): string =>
+  `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+
+const propertyCssText = (property: CollectedProperty): string =>
+  `@property ${property.name} {\n  syntax: ${quoteCssString(property.syntax)};\n  inherits: ${String(property.inherits)};\n  initial-value: ${property.initialValue};\n}\n`;
+
+const scopeCssText = (scope: CollectedScope): string => {
+  const limit = scope.hasLimit ? ` to (${scope.limit})` : '';
+  return `@scope (${scope.root})${limit} {\n${indentCssText(scope.bodyCssText)}}\n`;
+};
+
+const pageCssText = (page: CollectedPage): string => {
+  const selector = page.hasSelector ? ` ${page.selector}` : '';
+  const declarations = page.descriptors.map(([name, value]) => `  ${name}: ${value};`).join('\n');
+  return `@page${selector} {\n${declarations}\n}\n`;
+};
+
+const structuredCssTextForRule = (stylesheet: CollectedStylesheet, rule: CollectedRule): string => {
+  const property = stylesheet.properties.find(({ ruleOrder }) => ruleOrder === rule.order);
+  if (property !== undefined) {
+    return propertyCssText(property);
+  }
+
+  const scope = stylesheet.scopes.find(({ ruleOrder }) => ruleOrder === rule.order);
+  if (scope !== undefined) {
+    return scopeCssText(scope);
+  }
+
+  const page = stylesheet.pages.find(({ ruleOrder }) => ruleOrder === rule.order);
+  return page === undefined ? rule.cssText : pageCssText(page);
+};
+
+const stylesheetFor = (stylesheet: CollectedStylesheet): string => {
+  const groups = stylesheet.rules
+    .map((rule) => ({ ...rule, cssText: structuredCssTextForRule(stylesheet, rule) }))
+    .toSorted((left, right) => left.order - right.order)
+    .reduce<readonly CssRuleGroup[]>(appendRuleGroup, []);
+
+  return [
+    layerOrderCssText(stylesheet.layerOrder),
+    stylesheet.rootCssText,
+    ...groups.map(cssTextForGroup),
+  ]
     .filter((cssText) => cssText.length > 0)
     .join('\n');
+};
 
 const dynamicModuleLoader: CssModuleLoader = async (filePath): Promise<unknown> => {
   const moduleUrl = pathToFileURL(filePath);
@@ -331,7 +886,11 @@ const collectCss = async (
     if (!isStyleCollector(collected)) {
       return {
         _tag: 'Error',
-        error: { _tag: 'CssModuleLoadFailure', message: 'The stylesheet collector was corrupted.' },
+        error: {
+          _tag: 'CssModuleLoadFailure',
+          message:
+            'The stylesheet collector was corrupted. Expected an ordered rules array with non-negative integer order values and CSS text.',
+        },
       };
     }
 
@@ -339,6 +898,13 @@ const collectCss = async (
       _tag: 'Ok',
       value: {
         styles: collected.styles,
+        rules: collected.rules,
+        keyframes: collected.keyframes,
+        fontFaces: collected.fontFaces,
+        properties: collected.properties,
+        scopes: collected.scopes,
+        pages: collected.pages,
+        layerOrder: collected.layerOrder,
         variables: collected.variables,
         rootCssText: collected.rootCssText,
       },
@@ -352,8 +918,14 @@ const collectCss = async (
 const formatError = (error: CssModuleLoadFailure): string =>
   `@jvlk/rescript-css could not load a compiled stylesheet: ${error.message}`;
 
+const formatSourceAnalysisError = (error: CssSourceAnalysisFailure): string =>
+  `@jvlk/rescript-css could not statically extract keyframes: ${error.message}`;
+
+const formatFontFaceAnalysisError = (error: CssSourceAnalysisFailure): string =>
+  `@jvlk/rescript-css could not statically extract font faces: ${error.message}`;
+
 const activateStylesheet = (scope: string): string =>
-  `globalThis[Symbol.for(${JSON.stringify(collectorSymbolName)})] = { scope: ${JSON.stringify(scope)}, styles: [], variables: [], rootCssText: "" };`;
+  `globalThis[Symbol.for(${JSON.stringify(collectorSymbolName)})] = { scope: ${JSON.stringify(scope)}, styles: [], rules: [], keyframes: [], fontFaces: [], properties: [], scopes: [], pages: [], layerOrder: [], nextRuleOrder: 0, variables: [], rootCssText: "" };`;
 
 const stylesheetImportFor = (moduleFilePath: string, cssFilePath: string): string => {
   const relativeCssFilePath = relative(dirname(moduleFilePath), cssFilePath).replaceAll('\\', '/');
@@ -411,6 +983,7 @@ const closingParenthesisIndex = (
 
 const declarationForCall = (
   source: string,
+  code: string,
   callStart: number,
   openingParenthesisIndex: number,
 ): StyleDeclaration | undefined => {
@@ -419,7 +992,7 @@ const declarationForCall = (
     source.slice(lineStart, callStart),
   );
   const classNameVariable = declaration?.[1];
-  const closingParenthesis = closingParenthesisIndex(source, openingParenthesisIndex);
+  const closingParenthesis = closingParenthesisIndex(code, openingParenthesisIndex);
 
   if (
     classNameVariable === undefined ||
@@ -441,18 +1014,19 @@ const declarationsForCall = (
   moduleBinding: string,
   method: string,
 ): readonly StyleDeclaration[] => {
+  const code = codeOnlySource(source);
   const callPattern = new RegExp(
     `${escapeRegularExpression(moduleBinding)}\\.${escapeRegularExpression(method)}\\(`,
     'gu',
   );
 
-  return [...source.matchAll(callPattern)].flatMap((match) => {
+  return [...code.matchAll(callPattern)].flatMap((match) => {
     if (match.index === undefined) {
       return [];
     }
 
     const openingParenthesisIndex = match.index + match[0].length - 1;
-    const declaration = declarationForCall(source, match.index, openingParenthesisIndex);
+    const declaration = declarationForCall(source, code, match.index, openingParenthesisIndex);
     return declaration === undefined ? [] : [declaration];
   });
 };
@@ -463,18 +1037,19 @@ const callReplacementsFor = (
   method: string,
   value: string,
 ): readonly SourceReplacement[] => {
+  const code = codeOnlySource(source);
   const callPattern = new RegExp(
     `${escapeRegularExpression(moduleBinding)}\\.${escapeRegularExpression(method)}\\(`,
     'gu',
   );
 
-  return [...source.matchAll(callPattern)].flatMap((match) => {
+  return [...code.matchAll(callPattern)].flatMap((match) => {
     if (match.index === undefined) {
       return [];
     }
 
     const openingParenthesisIndex = match.index + match[0].length - 1;
-    const closingParenthesis = closingParenthesisIndex(source, openingParenthesisIndex);
+    const closingParenthesis = closingParenthesisIndex(code, openingParenthesisIndex);
 
     if (closingParenthesis === undefined) {
       return [];
@@ -508,6 +1083,74 @@ const variableReplacementsFor = (
     const variable = variables[index];
     return variable === undefined ? [] : [{ declaration, reference: variable.reference }];
   });
+
+const keyframesCallCount = (source: string, moduleBinding: string): number => {
+  const callPattern = new RegExp(`${escapeRegularExpression(moduleBinding)}\\.keyframes\\(`, 'gu');
+  return [...codeOnlySource(source).matchAll(callPattern)].length;
+};
+
+const keyframesReplacementsFor = (
+  scope: string,
+  declarations: readonly StyleDeclaration[],
+  keyframes: readonly CollectedKeyframes[],
+): readonly KeyframesReplacement[] =>
+  declarations.flatMap((declaration, index) => {
+    const collected = keyframes[index];
+    return collected === undefined
+      ? []
+      : [
+          {
+            declaration,
+            temporaryName: collected.temporaryName,
+            name: `rc_kf_${hashValue(`${scope}:keyframes:${declaration.classNameVariable}`)}`,
+          },
+        ];
+  });
+
+const fontFaceCallCount = (source: string, moduleBinding: string): number => {
+  const callPattern = new RegExp(`${escapeRegularExpression(moduleBinding)}\\.fontFace\\(`, 'gu');
+  return [...codeOnlySource(source).matchAll(callPattern)].length;
+};
+
+const fontFaceReplacementsFor = (
+  declarations: readonly StyleDeclaration[],
+  fontFaces: readonly CollectedFontFace[],
+): readonly FontFaceReplacement[] =>
+  declarations.flatMap((declaration, index) => {
+    const fontFace = fontFaces[index];
+    return fontFace === undefined ? [] : [{ declaration, family: fontFace.family }];
+  });
+
+const analyzeFontFaces = (
+  source: string,
+  moduleBinding: string,
+  stylesheet: CollectedStylesheet,
+): Result<readonly FontFaceReplacement[], CssSourceAnalysisFailure> => {
+  const declarations = declarationsForCall(source, moduleBinding, 'fontFace');
+  const callCount = fontFaceCallCount(source, moduleBinding);
+
+  if (callCount !== stylesheet.fontFaces.length || declarations.length !== callCount) {
+    return {
+      _tag: 'Error',
+      error: {
+        _tag: 'CssSourceAnalysisFailure',
+        message:
+          'Each top-level Css.fontFace call must be assigned directly to its own let binding.',
+      },
+    };
+  }
+
+  const replacements = fontFaceReplacementsFor(declarations, stylesheet.fontFaces);
+  return replacements.length === stylesheet.fontFaces.length
+    ? { _tag: 'Ok', value: replacements }
+    : {
+        _tag: 'Error',
+        error: {
+          _tag: 'CssSourceAnalysisFailure',
+          message: 'The collected font faces could not be paired with their source bindings.',
+        },
+      };
+};
 
 const scopedVariable = (
   scope: string,
@@ -562,6 +1205,84 @@ const scopeStylesheetVariables = (
     variables,
     rootCssText: replaceNames(stylesheet.rootCssText),
     styles: stylesheet.styles.map((style) => ({ ...style, cssText: replaceNames(style.cssText) })),
+    rules: stylesheet.rules.map((rule) => ({ ...rule, cssText: replaceNames(rule.cssText) })),
+    keyframes: stylesheet.keyframes,
+    fontFaces: stylesheet.fontFaces,
+    properties: stylesheet.properties,
+    scopes: stylesheet.scopes.map((scope) => ({
+      ...scope,
+      bodyCssText: replaceNames(scope.bodyCssText),
+    })),
+    pages: stylesheet.pages,
+    layerOrder: stylesheet.layerOrder,
+  };
+};
+
+const replaceKeyframeNames = (
+  cssText: string,
+  replacements: readonly KeyframesReplacement[],
+): string =>
+  replacements
+    .toSorted((left, right) => right.temporaryName.length - left.temporaryName.length)
+    .reduce(
+      (result, replacement) => result.replaceAll(replacement.temporaryName, replacement.name),
+      cssText,
+    );
+
+const scopeStylesheetKeyframes = (
+  source: string,
+  moduleBinding: string,
+  scope: string,
+  stylesheet: CollectedStylesheet,
+): Result<ScopedKeyframes, CssSourceAnalysisFailure> => {
+  const declarations = declarationsForCall(source, moduleBinding, 'keyframes');
+  const callCount = keyframesCallCount(source, moduleBinding);
+
+  if (callCount !== stylesheet.keyframes.length || declarations.length !== callCount) {
+    return {
+      _tag: 'Error',
+      error: {
+        _tag: 'CssSourceAnalysisFailure',
+        message:
+          'Each top-level Css.keyframes call must be assigned directly to its own let binding.',
+      },
+    };
+  }
+
+  const replacements = keyframesReplacementsFor(scope, declarations, stylesheet.keyframes);
+
+  if (replacements.length !== stylesheet.keyframes.length) {
+    return {
+      _tag: 'Error',
+      error: {
+        _tag: 'CssSourceAnalysisFailure',
+        message: 'The collected keyframes could not be paired with their source bindings.',
+      },
+    };
+  }
+
+  const replaceNames = (cssText: string): string => replaceKeyframeNames(cssText, replacements);
+  return {
+    _tag: 'Ok',
+    value: {
+      replacements,
+      stylesheet: {
+        ...stylesheet,
+        rootCssText: replaceNames(stylesheet.rootCssText),
+        styles: stylesheet.styles.map((style) => ({
+          ...style,
+          cssText: replaceNames(style.cssText),
+        })),
+        rules: stylesheet.rules.map((rule) => ({
+          ...rule,
+          cssText: replaceNames(rule.cssText),
+        })),
+        scopes: stylesheet.scopes.map((scope) => ({
+          ...scope,
+          bodyCssText: replaceNames(scope.bodyCssText),
+        })),
+      },
+    },
   };
 };
 
@@ -590,6 +1311,24 @@ const sourceReplacementForVariable = ({
   start: declaration.styleCallStart,
   end: declaration.styleCallEnd,
   value: JSON.stringify(reference),
+});
+
+const sourceReplacementForKeyframes = ({
+  name,
+  declaration,
+}: KeyframesReplacement): SourceReplacement => ({
+  start: declaration.styleCallStart,
+  end: declaration.styleCallEnd,
+  value: JSON.stringify(name),
+});
+
+const sourceReplacementForFontFace = ({
+  family,
+  declaration,
+}: FontFaceReplacement): SourceReplacement => ({
+  start: declaration.styleCallStart,
+  end: declaration.styleCallEnd,
+  value: JSON.stringify(family),
 });
 
 const replaceCalls = (source: string, replacements: readonly SourceReplacement[]): string =>
@@ -753,6 +1492,11 @@ const inlineStylesheetValues = (
     ...styleReplacements.map(sourceReplacementForStyle),
     ...variableReplacements.map(sourceReplacementForVariable),
     ...callReplacementsFor(source, moduleBinding, 'registerVars', 'undefined'),
+    ...callReplacementsFor(source, moduleBinding, 'global', 'undefined'),
+    ...callReplacementsFor(source, moduleBinding, 'layerOrder', 'undefined'),
+    ...callReplacementsFor(source, moduleBinding, 'registerProperty', 'undefined'),
+    ...callReplacementsFor(source, moduleBinding, 'scope', 'undefined'),
+    ...callReplacementsFor(source, moduleBinding, 'page', 'undefined'),
   ];
   const sourceWithValues = replaceCalls(source, callReplacements);
 
@@ -768,6 +1512,8 @@ const injectStylesheetImport = (
   moduleFilePath: string,
   moduleBinding: string,
   stylesheet: CollectedStylesheet,
+  keyframesReplacements: readonly KeyframesReplacement[],
+  fontFaceReplacements: readonly FontFaceReplacement[],
   removeCssModuleImport: (source: string, moduleBinding: string) => string,
 ): string => {
   const sourceForTransformation = removePreviousStylesheetTransform(
@@ -776,15 +1522,19 @@ const injectStylesheetImport = (
     cssFilePath,
     moduleFilePath,
   );
+  const sourceWithAtRuleValues = replaceCalls(sourceForTransformation, [
+    ...keyframesReplacements.map(sourceReplacementForKeyframes),
+    ...fontFaceReplacements.map(sourceReplacementForFontFace),
+  ]);
   const inlinedStyleClassNames = inlineStylesheetValues(
-    sourceForTransformation,
+    sourceWithAtRuleValues,
     moduleBinding,
     stylesheet,
   );
   const stylesheetImport = stylesheetImportFor(moduleFilePath, cssFilePath);
 
   if (inlinedStyleClassNames === undefined) {
-    return `${stylesheetImport}${activateStylesheet(moduleFilePath)}\n${removeStylesModule(sourceForTransformation)}`;
+    return `${stylesheetImport}${activateStylesheet(moduleFilePath)}\n${removeStylesModule(sourceWithAtRuleValues)}`;
   }
 
   const sourceWithoutCssModule = removeCssModuleImport(
@@ -834,8 +1584,26 @@ const prepareStylesheetModule = async (
     throw new Error(formatError(result.error));
   }
 
-  const stylesheet =
+  const variableScopedStylesheet =
     scopeStylesheetVariables(source, moduleBinding, moduleFilePath, result.value) ?? result.value;
+  const keyframesResult = scopeStylesheetKeyframes(
+    source,
+    moduleBinding,
+    moduleFilePath,
+    variableScopedStylesheet,
+  );
+
+  if (keyframesResult._tag === 'Error') {
+    throw new Error(formatSourceAnalysisError(keyframesResult.error));
+  }
+
+  const { stylesheet, replacements: keyframesReplacements } = keyframesResult.value;
+  const fontFaceResult = analyzeFontFaces(source, moduleBinding, stylesheet);
+
+  if (fontFaceResult._tag === 'Error') {
+    throw new Error(formatFontFaceAnalysisError(fontFaceResult.error));
+  }
+
   const cssFilePath = matcher.cssFilePathFor(moduleFilePath);
   const transformedSource = injectStylesheetImport(
     source,
@@ -843,6 +1611,8 @@ const prepareStylesheetModule = async (
     moduleFilePath,
     moduleBinding,
     stylesheet,
+    keyframesReplacements,
+    fontFaceResult.value,
     matcher.removeCssModuleImport,
   );
   const stylesheetImport = stylesheetImportFor(moduleFilePath, cssFilePath);
@@ -949,8 +1719,28 @@ export const rescriptCss = (): Plugin => {
         return null;
       }
 
-      const scopedStylesheet = scopeStylesheetVariables(source, moduleBinding, id, result.value);
-      const stylesheet = scopedStylesheet ?? result.value;
+      const variableScopedStylesheet =
+        scopeStylesheetVariables(source, moduleBinding, id, result.value) ?? result.value;
+      const keyframesResult = scopeStylesheetKeyframes(
+        source,
+        moduleBinding,
+        id,
+        variableScopedStylesheet,
+      );
+
+      if (keyframesResult._tag === 'Error') {
+        this.error(formatSourceAnalysisError(keyframesResult.error));
+        return null;
+      }
+
+      const { stylesheet, replacements: keyframesReplacements } = keyframesResult.value;
+      const fontFaceResult = analyzeFontFaces(source, moduleBinding, stylesheet);
+
+      if (fontFaceResult._tag === 'Error') {
+        this.error(formatFontFaceAnalysisError(fontFaceResult.error));
+        return null;
+      }
+
       const cssFilePath = matcher.cssFilePathFor(id);
       const transformedSource = injectStylesheetImport(
         source,
@@ -958,6 +1748,8 @@ export const rescriptCss = (): Plugin => {
         id,
         moduleBinding,
         stylesheet,
+        keyframesReplacements,
+        fontFaceResult.value,
         matcher.removeCssModuleImport,
       );
 

@@ -1,0 +1,17 @@
+html, body {
+
+}
+
+html a, html.ready, body a, body.ready {
+  color: red;
+}
+
+@scope (.root) {
+  :scope > h2, :scope > h3 {
+
+  }
+
+  :scope > h2 a, :scope > h2 + p, :scope > h3 a, :scope > h3 + p {
+    color: blue;
+  }
+}

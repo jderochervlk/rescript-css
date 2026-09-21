@@ -1,0 +1,25 @@
+@layer reset, tokens, base, components;
+
+@layer reset {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+}
+
+@layer base {
+  body {
+    margin: 0;
+    color: var(--rc_mszmw5);
+    font-family: "Inter", system-ui, sans-serif;
+    background: var(--rc_ytpt3h);
+  }
+
+  body a {
+    color: var(--rc_16lsq83);
+  }
+
+  body::selection {
+    color: var(--rc_1se5ehu);
+    background: var(--rc_16lsq83);
+  }
+}

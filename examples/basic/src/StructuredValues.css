@@ -1,0 +1,28 @@
+.rc_adzrb6_0 {
+  grid-template-columns: [content-start] repeat(auto-fit, minmax(16rem, 1fr)) [content-end];
+  grid-template-rows: subgrid [row-start] [row-end];
+  grid-auto-columns: fit-content(50%);
+  grid-auto-rows: minmax(4rem, auto);
+  color: oklch(0.42 0.09 210);
+  text-decoration-color: transparent;
+  background-color: rgb(248 250 252 / 0.9);
+  border-color: hsl(188 86% 40%);
+  outline-color: currentColor;
+  transform: translate(-0.5rem, 25%) rotate(-12.5deg) scale(1, 0.95);
+  animation-delay: -0.25s;
+  animation-duration: 180.5ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: 0s;
+  transition-duration: var(--motion-duration);
+  transition-timing-function: steps(4, jump-end);
+  accent-color: rebeccapurple;
+  caret-color: #0f766e;
+}
+
+.rc_adzrb6_1 {
+  grid-template-columns: var(--layout-columns);
+  color: var(--rc_mszmw5);
+  transform: translate(var(--x), var(--y));
+  animation-duration: calc(1s / 2);
+  animation-timing-function: linear(0, 0.75 60%, 1);
+}

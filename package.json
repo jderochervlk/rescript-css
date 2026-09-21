@@ -19,7 +19,7 @@
     "prepare": "lefthook install",
     "rescript": "pnpm --filter @jvlk/rescript-css exec rescript build && pnpm --filter example-basic exec rescript build && pnpm --filter example-react exec rescript build && pnpm --filter example-xote exec rescript build",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage --coverage.exclude='packages/rescript-css/src/*.res.js'",
     "tsc": "pnpm --filter @jvlk/rescript-css exec tsc --noEmit --project tsconfig.json",
     "typecheck": "pnpm --filter @jvlk/rescript-css run typecheck && vitest --run --typecheck"
   },

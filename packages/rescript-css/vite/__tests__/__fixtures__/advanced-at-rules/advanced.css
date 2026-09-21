@@ -1,0 +1,51 @@
+@layer tokens, base;
+
+:root {
+  --rc_q8pdgx: teal;
+}
+
+@layer tokens {
+  @property --progress {
+    syntax: "<number> | \"auto\"";
+    inherits: false;
+    initial-value: 0;
+  }
+}
+
+@layer base {
+  @scope (.article:is(main, aside)) to (.comments[data-state="open"]) {
+    :scope > h2 {
+      color: var(--rc_q8pdgx);
+    }
+
+    :scope > h2 a {
+      color: rebeccapurple;
+    }
+
+    @media (width >= 48rem) {
+      :scope > h2 {
+        font-family: serif;
+      }
+    }
+  }
+}
+
+@page {
+  size: A4;
+  margin: 2cm;
+}
+
+@layer base {
+  @page invoice:first {
+    page-orientation: upright;
+    marks: crop cross;
+  }
+}
+
+.rc_ausksk_0 {
+  background: white;
+}
+
+body {
+  color: black;
+}

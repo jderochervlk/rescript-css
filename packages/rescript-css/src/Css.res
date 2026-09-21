@@ -8,6 +8,14 @@ type css = {
   custom?: array<(string, string)>,
   display?: CssValue.Display.t,
   position?: CssValue.Position.t,
+  anchorName?: string,
+  anchorScope?: string,
+  positionAnchor?: string,
+  positionArea?: string,
+  positionTry?: string,
+  positionTryFallbacks?: string,
+  positionTryOrder?: CssValue.PositionTryOrder.t,
+  positionVisibility?: CssValue.PositionVisibility.t,
   inset?: CssValue.Length.t,
   insetBlock?: CssValue.Length.t,
   insetInline?: CssValue.Length.t,
@@ -40,6 +48,11 @@ type css = {
   minInlineSize?: CssValue.Length.t,
   maxInlineSize?: CssValue.Length.t,
   aspectRatio?: string,
+  containIntrinsicSize?: string,
+  containIntrinsicWidth?: CssValue.ContainIntrinsicAxis.t,
+  containIntrinsicHeight?: CssValue.ContainIntrinsicAxis.t,
+  containIntrinsicBlockSize?: CssValue.ContainIntrinsicAxis.t,
+  containIntrinsicInlineSize?: CssValue.ContainIntrinsicAxis.t,
   margin?: CssValue.Length.t,
   marginTop?: CssValue.Length.t,
   marginRight?: CssValue.Length.t,
@@ -83,10 +96,10 @@ type css = {
   gridArea?: string,
   gridTemplate?: string,
   gridTemplateAreas?: string,
-  gridTemplateColumns?: string,
-  gridTemplateRows?: string,
-  gridAutoColumns?: string,
-  gridAutoRows?: string,
+  gridTemplateColumns?: CssValue.TrackList.t,
+  gridTemplateRows?: CssValue.TrackList.t,
+  gridAutoColumns?: CssValue.AutoTrackList.t,
+  gridAutoRows?: CssValue.AutoTrackList.t,
   gridAutoFlow?: CssValue.GridAutoFlow.t,
   gridColumn?: string,
   gridColumnStart?: string,
@@ -97,10 +110,17 @@ type css = {
   gap?: CssValue.Length.t,
   rowGap?: CssValue.Length.t,
   columnGap?: CssValue.Length.t,
-  color?: string,
+  color?: CssValue.Color.t,
+  colorScheme?: string,
+  forcedColorAdjust?: CssValue.ForcedColorAdjust.t,
+  printColorAdjust?: CssValue.PrintColorAdjust.t,
   font?: string,
   fontFamily?: string,
   fontFeatureSettings?: string,
+  fontVariationSettings?: string,
+  fontPalette?: string,
+  fontSynthesis?: CssValue.FontSynthesis.t,
+  fontSizeAdjust?: CssValue.FontSizeAdjust.t,
   fontKerning?: string,
   fontOpticalSizing?: string,
   fontSize?: CssValue.Length.t,
@@ -110,16 +130,24 @@ type css = {
   fontWeight?: CssValue.FontWeight.t,
   letterSpacing?: CssValue.Length.t,
   lineHeight?: CssValue.LineHeight.t,
+  lineClamp?: CssValue.LineClamp.t,
   textAlign?: CssValue.TextAlign.t,
   textAlignLast?: CssValue.TextAlign.t,
   textDecoration?: string,
-  textDecorationColor?: string,
+  textDecorationColor?: CssValue.Color.t,
   textDecorationLine?: string,
   textDecorationStyle?: string,
   textIndent?: CssValue.Length.t,
   textOverflow?: CssValue.TextOverflow.t,
   textShadow?: string,
   textTransform?: CssValue.TextTransform.t,
+  textWrap?: CssValue.TextWrap.t,
+  textWrapMode?: CssValue.TextWrapMode.t,
+  textWrapStyle?: CssValue.TextWrapStyle.t,
+  textEmphasis?: string,
+  textOrientation?: CssValue.TextOrientation.t,
+  unicodeBidi?: CssValue.UnicodeBidi.t,
+  hangingPunctuation?: CssValue.HangingPunctuation.t,
   whiteSpace?: CssValue.WhiteSpace.t,
   wordBreak?: CssValue.WordBreak.t,
   wordSpacing?: CssValue.Length.t,
@@ -133,7 +161,7 @@ type css = {
   backgroundAttachment?: string,
   backgroundBlendMode?: string,
   backgroundClip?: string,
-  backgroundColor?: string,
+  backgroundColor?: CssValue.Color.t,
   backgroundImage?: string,
   backgroundOrigin?: string,
   backgroundPosition?: string,
@@ -146,16 +174,42 @@ type css = {
   borderLeft?: string,
   borderBlock?: string,
   borderInline?: string,
-  borderColor?: string,
+  borderBlockStart?: string,
+  borderBlockEnd?: string,
+  borderInlineStart?: string,
+  borderInlineEnd?: string,
+  borderColor?: CssValue.Color.t,
+  borderBlockColor?: CssValue.Color.t,
+  borderBlockStartColor?: CssValue.Color.t,
+  borderBlockEndColor?: CssValue.Color.t,
+  borderInlineColor?: CssValue.Color.t,
+  borderInlineStartColor?: CssValue.Color.t,
+  borderInlineEndColor?: CssValue.Color.t,
   borderStyle?: CssValue.BorderStyle.t,
-  borderWidth?: CssValue.Length.t,
-  borderRadius?: CssValue.Length.t,
-  borderTopLeftRadius?: CssValue.Length.t,
-  borderTopRightRadius?: CssValue.Length.t,
-  borderBottomRightRadius?: CssValue.Length.t,
-  borderBottomLeftRadius?: CssValue.Length.t,
+  borderBlockStyle?: CssValue.BorderStyle.t,
+  borderBlockStartStyle?: CssValue.BorderStyle.t,
+  borderBlockEndStyle?: CssValue.BorderStyle.t,
+  borderInlineStyle?: CssValue.BorderStyle.t,
+  borderInlineStartStyle?: CssValue.BorderStyle.t,
+  borderInlineEndStyle?: CssValue.BorderStyle.t,
+  borderWidth?: CssValue.BorderWidth.t,
+  borderBlockWidth?: CssValue.LogicalBorderWidth.t,
+  borderBlockStartWidth?: CssValue.BorderWidthValue.t,
+  borderBlockEndWidth?: CssValue.BorderWidthValue.t,
+  borderInlineWidth?: CssValue.LogicalBorderWidth.t,
+  borderInlineStartWidth?: CssValue.BorderWidthValue.t,
+  borderInlineEndWidth?: CssValue.BorderWidthValue.t,
+  borderRadius?: CssValue.BorderRadius.t,
+  borderTopLeftRadius?: CssValue.CornerRadius.t,
+  borderTopRightRadius?: CssValue.CornerRadius.t,
+  borderBottomRightRadius?: CssValue.CornerRadius.t,
+  borderBottomLeftRadius?: CssValue.CornerRadius.t,
+  borderStartStartRadius?: CssValue.CornerRadius.t,
+  borderStartEndRadius?: CssValue.CornerRadius.t,
+  borderEndStartRadius?: CssValue.CornerRadius.t,
+  borderEndEndRadius?: CssValue.CornerRadius.t,
   outline?: string,
-  outlineColor?: string,
+  outlineColor?: CssValue.Color.t,
   outlineStyle?: CssValue.BorderStyle.t,
   outlineWidth?: CssValue.Length.t,
   outlineOffset?: CssValue.Length.t,
@@ -165,7 +219,11 @@ type css = {
   backdropFilter?: string,
   mixBlendMode?: string,
   isolation?: CssValue.Isolation.t,
-  transform?: string,
+  transform?: CssValue.Transform.t,
+  translate?: CssValue.Translate.t,
+  rotate?: CssValue.Rotate.t,
+  scale?: CssValue.Scale.t,
+  transformBox?: CssValue.TransformBox.t,
   transformOrigin?: string,
   transformStyle?: string,
   perspective?: CssValue.Length.t,
@@ -173,20 +231,29 @@ type css = {
   backfaceVisibility?: CssValue.Visibility.t,
   clipPath?: string,
   mask?: string,
+  viewTransitionName?: string,
+  viewTransitionClass?: string,
   animation?: string,
-  animationDelay?: string,
+  animationDelay?: CssValue.Time.t,
   animationDirection?: string,
-  animationDuration?: string,
+  animationDuration?: CssValue.Duration.t,
   animationFillMode?: string,
   animationIterationCount?: string,
   animationName?: string,
   animationPlayState?: string,
-  animationTimingFunction?: string,
+  animationTimingFunction?: CssValue.Easing.t,
   transition?: string,
-  transitionDelay?: string,
-  transitionDuration?: string,
+  transitionDelay?: CssValue.Time.t,
+  transitionDuration?: CssValue.Duration.t,
   transitionProperty?: string,
-  transitionTimingFunction?: string,
+  transitionTimingFunction?: CssValue.Easing.t,
+  transitionBehavior?: CssValue.TransitionBehavior.t,
+  offset?: string,
+  offsetPath?: string,
+  offsetDistance?: CssValue.Length.t,
+  offsetPosition?: string,
+  offsetAnchor?: string,
+  offsetRotate?: CssValue.OffsetRotate.t,
   objectFit?: CssValue.ObjectFit.t,
   objectPosition?: string,
   imageRendering?: string,
@@ -200,8 +267,8 @@ type css = {
   emptyCells?: string,
   tableLayout?: CssValue.TableLayout.t,
   appearance?: CssValue.Appearance.t,
-  accentColor?: string,
-  caretColor?: string,
+  accentColor?: CssValue.Color.t,
+  caretColor?: CssValue.Color.t,
   cursor?: CssValue.Cursor.t,
   pointerEvents?: CssValue.PointerEvents.t,
   resize?: CssValue.Resize.t,
@@ -209,11 +276,35 @@ type css = {
   touchAction?: string,
   scrollBehavior?: CssValue.ScrollBehavior.t,
   scrollMargin?: CssValue.Length.t,
+  scrollMarginTop?: CssValue.Length.t,
+  scrollMarginRight?: CssValue.Length.t,
+  scrollMarginBottom?: CssValue.Length.t,
+  scrollMarginLeft?: CssValue.Length.t,
+  scrollMarginBlock?: CssValue.LengthPair.t,
+  scrollMarginBlockStart?: CssValue.Length.t,
+  scrollMarginBlockEnd?: CssValue.Length.t,
+  scrollMarginInline?: CssValue.LengthPair.t,
+  scrollMarginInlineStart?: CssValue.Length.t,
+  scrollMarginInlineEnd?: CssValue.Length.t,
   scrollPadding?: CssValue.Length.t,
+  scrollPaddingTop?: CssValue.Length.t,
+  scrollPaddingRight?: CssValue.Length.t,
+  scrollPaddingBottom?: CssValue.Length.t,
+  scrollPaddingLeft?: CssValue.Length.t,
+  scrollPaddingBlock?: CssValue.LengthPair.t,
+  scrollPaddingBlockStart?: CssValue.Length.t,
+  scrollPaddingBlockEnd?: CssValue.Length.t,
+  scrollPaddingInline?: CssValue.LengthPair.t,
+  scrollPaddingInlineStart?: CssValue.Length.t,
+  scrollPaddingInlineEnd?: CssValue.Length.t,
   scrollSnapAlign?: string,
   scrollSnapStop?: string,
   scrollSnapType?: string,
-  overscrollBehavior?: string,
+  overscrollBehavior?: CssValue.OverscrollBehavior.t,
+  overscrollBehaviorX?: CssValue.OverscrollBehavior.t,
+  overscrollBehaviorY?: CssValue.OverscrollBehavior.t,
+  overscrollBehaviorBlock?: CssValue.OverscrollBehavior.t,
+  overscrollBehaviorInline?: CssValue.OverscrollBehavior.t,
   scrollbarColor?: string,
   scrollbarWidth?: string,
   willChange?: string,
@@ -227,10 +318,37 @@ type css = {
   containerName?: string,
   containerType?: string,
   contentVisibility?: string,
+  container?: string,
+  boxDecorationBreak?: CssValue.BoxDecorationBreak.t,
+  breakBefore?: CssValue.BreakBetween.t,
+  breakAfter?: CssValue.BreakBetween.t,
+  breakInside?: CssValue.BreakInside.t,
+  orphans?: int,
+  widows?: int,
+  shapeOutside?: string,
+  shapeMargin?: CssValue.Length.t,
+  shapeImageThreshold?: CssValue.Alpha.t,
+  fieldSizing?: CssValue.FieldSizing.t,
+  interpolateSize?: CssValue.InterpolateSize.t,
   content?: string,
   quotes?: string,
   counterIncrement?: string,
   counterReset?: string,
+  fill?: CssValue.Paint.t,
+  fillOpacity?: CssValue.Alpha.t,
+  fillRule?: CssValue.FillRule.t,
+  stroke?: CssValue.Paint.t,
+  strokeWidth?: CssValue.Length.t,
+  strokeOpacity?: CssValue.Alpha.t,
+  strokeLinecap?: CssValue.StrokeLinecap.t,
+  strokeLinejoin?: CssValue.StrokeLinejoin.t,
+  strokeDasharray?: CssValue.StrokeDasharray.t,
+  strokeDashoffset?: CssValue.Length.t,
+  strokeMiterlimit?: float,
+  paintOrder?: CssValue.PaintOrder.t,
+  vectorEffect?: CssValue.VectorEffect.t,
+  stopColor?: CssValue.Color.t,
+  stopOpacity?: CssValue.Alpha.t,
   h1?: string,
   h2?: string,
   h3?: string,
@@ -289,7 +407,7 @@ type definition = Runtime.definition
 
 let var: string => string = Runtime.var
 let registerVars: array<string> => unit = Runtime.registerVars
-let register: definition => string = Runtime.style
+let register: definition => string = definition => Runtime.style(definition)
 
 let lengthValue = CssValue.Length.toString
 let displayValue = CssValue.Display.toString
@@ -299,6 +417,28 @@ let floatValue = value => value->Float.toString
 let media = (~query, style) => {condition: `@media ${query}`, style}
 let supports = (~condition, style) => {condition: `@supports ${condition}`, style}
 let container = (~query, style) => {condition: `@container ${query}`, style}
+let rgb = CssValue.Color.rgb
+let hsl = CssValue.Color.hsl
+let oklch = CssValue.Color.oklch
+let easingStop = CssValue.Easing.linearStop
+let linearEasing = CssValue.Easing.linearFunction
+let timeMs = CssValue.Time.ms
+let timeSeconds = CssValue.Time.seconds
+let timeZero = CssValue.Time.zero
+let timeVar = CssValue.Time.variable
+let timeRaw = CssValue.Time.raw
+let durationMs = CssValue.Duration.ms
+let durationSeconds = CssValue.Duration.seconds
+let durationZero = CssValue.Duration.zero
+let durationVar = CssValue.Duration.variable
+let durationRaw = CssValue.Duration.raw
+let cubicBezier = CssValue.Easing.cubicBezier
+let steps = CssValue.Easing.steps
+let trackLength = CssValue.TrackLength.make
+let trackFraction = CssValue.TrackFraction.make
+let repeatCount = CssValue.RepeatCount.make
+let borderLength = CssValue.BorderLength.make
+let translateZLength = CssValue.TranslateZLength.make
 
 let mapOptional = (value, serialize) =>
   switch value {
@@ -318,6 +458,17 @@ let layoutDeclarations = css =>
   [
     ("display", css.display->mapOptional(CssValue.Display.toString)),
     ("position", css.position->mapOptional(CssValue.Position.toString)),
+    ("anchor-name", css.anchorName),
+    ("anchor-scope", css.anchorScope),
+    ("position-anchor", css.positionAnchor),
+    ("position-area", css.positionArea),
+    ("position-try", css.positionTry),
+    ("position-try-fallbacks", css.positionTryFallbacks),
+    ("position-try-order", css.positionTryOrder->mapOptional(CssValue.PositionTryOrder.toString)),
+    (
+      "position-visibility",
+      css.positionVisibility->mapOptional(CssValue.PositionVisibility.toString),
+    ),
     ("inset", css.inset->mapOptional(CssValue.Length.toString)),
     ("inset-block", css.insetBlock->mapOptional(CssValue.Length.toString)),
     ("inset-inline", css.insetInline->mapOptional(CssValue.Length.toString)),
@@ -354,6 +505,23 @@ let sizeDeclarations = css =>
     ("min-inline-size", css.minInlineSize->mapOptional(CssValue.Length.toString)),
     ("max-inline-size", css.maxInlineSize->mapOptional(CssValue.Length.toString)),
     ("aspect-ratio", css.aspectRatio),
+    ("contain-intrinsic-size", css.containIntrinsicSize),
+    (
+      "contain-intrinsic-width",
+      css.containIntrinsicWidth->mapOptional(CssValue.ContainIntrinsicAxis.toString),
+    ),
+    (
+      "contain-intrinsic-height",
+      css.containIntrinsicHeight->mapOptional(CssValue.ContainIntrinsicAxis.toString),
+    ),
+    (
+      "contain-intrinsic-block-size",
+      css.containIntrinsicBlockSize->mapOptional(CssValue.ContainIntrinsicAxis.toString),
+    ),
+    (
+      "contain-intrinsic-inline-size",
+      css.containIntrinsicInlineSize->mapOptional(CssValue.ContainIntrinsicAxis.toString),
+    ),
   ]->declarationsFrom
 
 let marginDeclarations = css =>
@@ -413,10 +581,10 @@ let gridDeclarations = css =>
     ("grid-area", css.gridArea),
     ("grid-template", css.gridTemplate),
     ("grid-template-areas", css.gridTemplateAreas),
-    ("grid-template-columns", css.gridTemplateColumns),
-    ("grid-template-rows", css.gridTemplateRows),
-    ("grid-auto-columns", css.gridAutoColumns),
-    ("grid-auto-rows", css.gridAutoRows),
+    ("grid-template-columns", css.gridTemplateColumns->mapOptional(CssValue.TrackList.toString)),
+    ("grid-template-rows", css.gridTemplateRows->mapOptional(CssValue.TrackList.toString)),
+    ("grid-auto-columns", css.gridAutoColumns->mapOptional(CssValue.AutoTrackList.toString)),
+    ("grid-auto-rows", css.gridAutoRows->mapOptional(CssValue.AutoTrackList.toString)),
     ("grid-auto-flow", css.gridAutoFlow->mapOptional(CssValue.GridAutoFlow.toString)),
     ("grid-column", css.gridColumn),
     ("grid-column-start", css.gridColumnStart),
@@ -431,10 +599,20 @@ let gridDeclarations = css =>
 
 let fontDeclarations = css =>
   [
-    ("color", css.color),
+    ("color", css.color->mapOptional(CssValue.Color.toString)),
+    ("color-scheme", css.colorScheme),
+    (
+      "forced-color-adjust",
+      css.forcedColorAdjust->mapOptional(CssValue.ForcedColorAdjust.toString),
+    ),
+    ("print-color-adjust", css.printColorAdjust->mapOptional(CssValue.PrintColorAdjust.toString)),
     ("font", css.font),
     ("font-family", css.fontFamily),
     ("font-feature-settings", css.fontFeatureSettings),
+    ("font-variation-settings", css.fontVariationSettings),
+    ("font-palette", css.fontPalette),
+    ("font-synthesis", css.fontSynthesis->mapOptional(CssValue.FontSynthesis.toString)),
+    ("font-size-adjust", css.fontSizeAdjust->mapOptional(CssValue.FontSizeAdjust.toString)),
     ("font-kerning", css.fontKerning),
     ("font-optical-sizing", css.fontOpticalSizing),
     ("font-size", css.fontSize->mapOptional(CssValue.Length.toString)),
@@ -444,6 +622,7 @@ let fontDeclarations = css =>
     ("font-weight", css.fontWeight->mapOptional(CssValue.FontWeight.toString)),
     ("letter-spacing", css.letterSpacing->mapOptional(CssValue.Length.toString)),
     ("line-height", css.lineHeight->mapOptional(CssValue.LineHeight.toString)),
+    ("line-clamp", css.lineClamp->mapOptional(CssValue.LineClamp.toString)),
   ]->declarationsFrom
 
 let textDeclarations = css =>
@@ -451,13 +630,23 @@ let textDeclarations = css =>
     ("text-align", css.textAlign->mapOptional(CssValue.TextAlign.toString)),
     ("text-align-last", css.textAlignLast->mapOptional(CssValue.TextAlign.toString)),
     ("text-decoration", css.textDecoration),
-    ("text-decoration-color", css.textDecorationColor),
+    ("text-decoration-color", css.textDecorationColor->mapOptional(CssValue.Color.toString)),
     ("text-decoration-line", css.textDecorationLine),
     ("text-decoration-style", css.textDecorationStyle),
     ("text-indent", css.textIndent->mapOptional(CssValue.Length.toString)),
     ("text-overflow", css.textOverflow->mapOptional(CssValue.TextOverflow.toString)),
     ("text-shadow", css.textShadow),
     ("text-transform", css.textTransform->mapOptional(CssValue.TextTransform.toString)),
+    ("text-wrap", css.textWrap->mapOptional(CssValue.TextWrap.toString)),
+    ("text-wrap-mode", css.textWrapMode->mapOptional(CssValue.TextWrapMode.toString)),
+    ("text-wrap-style", css.textWrapStyle->mapOptional(CssValue.TextWrapStyle.toString)),
+    ("text-emphasis", css.textEmphasis),
+    ("text-orientation", css.textOrientation->mapOptional(CssValue.TextOrientation.toString)),
+    ("unicode-bidi", css.unicodeBidi->mapOptional(CssValue.UnicodeBidi.toString)),
+    (
+      "hanging-punctuation",
+      css.hangingPunctuation->mapOptional(CssValue.HangingPunctuation.toString),
+    ),
     ("white-space", css.whiteSpace->mapOptional(CssValue.WhiteSpace.toString)),
     ("word-break", css.wordBreak->mapOptional(CssValue.WordBreak.toString)),
     ("word-spacing", css.wordSpacing->mapOptional(CssValue.Length.toString)),
@@ -475,7 +664,7 @@ let backgroundDeclarations = css =>
     ("background-attachment", css.backgroundAttachment),
     ("background-blend-mode", css.backgroundBlendMode),
     ("background-clip", css.backgroundClip),
-    ("background-color", css.backgroundColor),
+    ("background-color", css.backgroundColor->mapOptional(CssValue.Color.toString)),
     ("background-image", css.backgroundImage),
     ("background-origin", css.backgroundOrigin),
     ("background-position", css.backgroundPosition),
@@ -492,22 +681,87 @@ let borderDeclarations = css =>
     ("border-left", css.borderLeft),
     ("border-block", css.borderBlock),
     ("border-inline", css.borderInline),
-    ("border-color", css.borderColor),
+    ("border-block-start", css.borderBlockStart),
+    ("border-block-end", css.borderBlockEnd),
+    ("border-inline-start", css.borderInlineStart),
+    ("border-inline-end", css.borderInlineEnd),
+    ("border-color", css.borderColor->mapOptional(CssValue.Color.toString)),
+    ("border-block-color", css.borderBlockColor->mapOptional(CssValue.Color.toString)),
+    ("border-block-start-color", css.borderBlockStartColor->mapOptional(CssValue.Color.toString)),
+    ("border-block-end-color", css.borderBlockEndColor->mapOptional(CssValue.Color.toString)),
+    ("border-inline-color", css.borderInlineColor->mapOptional(CssValue.Color.toString)),
+    ("border-inline-start-color", css.borderInlineStartColor->mapOptional(CssValue.Color.toString)),
+    ("border-inline-end-color", css.borderInlineEndColor->mapOptional(CssValue.Color.toString)),
     ("border-style", css.borderStyle->mapOptional(CssValue.BorderStyle.toString)),
-    ("border-width", css.borderWidth->mapOptional(CssValue.Length.toString)),
-    ("border-radius", css.borderRadius->mapOptional(CssValue.Length.toString)),
-    ("border-top-left-radius", css.borderTopLeftRadius->mapOptional(CssValue.Length.toString)),
-    ("border-top-right-radius", css.borderTopRightRadius->mapOptional(CssValue.Length.toString)),
+    ("border-block-style", css.borderBlockStyle->mapOptional(CssValue.BorderStyle.toString)),
+    (
+      "border-block-start-style",
+      css.borderBlockStartStyle->mapOptional(CssValue.BorderStyle.toString),
+    ),
+    ("border-block-end-style", css.borderBlockEndStyle->mapOptional(CssValue.BorderStyle.toString)),
+    ("border-inline-style", css.borderInlineStyle->mapOptional(CssValue.BorderStyle.toString)),
+    (
+      "border-inline-start-style",
+      css.borderInlineStartStyle->mapOptional(CssValue.BorderStyle.toString),
+    ),
+    (
+      "border-inline-end-style",
+      css.borderInlineEndStyle->mapOptional(CssValue.BorderStyle.toString),
+    ),
+    ("border-width", css.borderWidth->mapOptional(CssValue.BorderWidth.toString)),
+    ("border-block-width", css.borderBlockWidth->mapOptional(CssValue.LogicalBorderWidth.toString)),
+    (
+      "border-block-start-width",
+      css.borderBlockStartWidth->mapOptional(CssValue.BorderWidthValue.toString),
+    ),
+    (
+      "border-block-end-width",
+      css.borderBlockEndWidth->mapOptional(CssValue.BorderWidthValue.toString),
+    ),
+    (
+      "border-inline-width",
+      css.borderInlineWidth->mapOptional(CssValue.LogicalBorderWidth.toString),
+    ),
+    (
+      "border-inline-start-width",
+      css.borderInlineStartWidth->mapOptional(CssValue.BorderWidthValue.toString),
+    ),
+    (
+      "border-inline-end-width",
+      css.borderInlineEndWidth->mapOptional(CssValue.BorderWidthValue.toString),
+    ),
+    ("border-radius", css.borderRadius->mapOptional(CssValue.BorderRadius.toString)),
+    (
+      "border-top-left-radius",
+      css.borderTopLeftRadius->mapOptional(CssValue.CornerRadius.toString),
+    ),
+    (
+      "border-top-right-radius",
+      css.borderTopRightRadius->mapOptional(CssValue.CornerRadius.toString),
+    ),
     (
       "border-bottom-right-radius",
-      css.borderBottomRightRadius->mapOptional(CssValue.Length.toString),
+      css.borderBottomRightRadius->mapOptional(CssValue.CornerRadius.toString),
     ),
     (
       "border-bottom-left-radius",
-      css.borderBottomLeftRadius->mapOptional(CssValue.Length.toString),
+      css.borderBottomLeftRadius->mapOptional(CssValue.CornerRadius.toString),
     ),
+    (
+      "border-start-start-radius",
+      css.borderStartStartRadius->mapOptional(CssValue.CornerRadius.toString),
+    ),
+    (
+      "border-start-end-radius",
+      css.borderStartEndRadius->mapOptional(CssValue.CornerRadius.toString),
+    ),
+    (
+      "border-end-start-radius",
+      css.borderEndStartRadius->mapOptional(CssValue.CornerRadius.toString),
+    ),
+    ("border-end-end-radius", css.borderEndEndRadius->mapOptional(CssValue.CornerRadius.toString)),
     ("outline", css.outline),
-    ("outline-color", css.outlineColor),
+    ("outline-color", css.outlineColor->mapOptional(CssValue.Color.toString)),
     ("outline-style", css.outlineStyle->mapOptional(CssValue.BorderStyle.toString)),
     ("outline-width", css.outlineWidth->mapOptional(CssValue.Length.toString)),
     ("outline-offset", css.outlineOffset->mapOptional(CssValue.Length.toString)),
@@ -521,7 +775,11 @@ let effectDeclarations = css =>
     ("backdrop-filter", css.backdropFilter),
     ("mix-blend-mode", css.mixBlendMode),
     ("isolation", css.isolation->mapOptional(CssValue.Isolation.toString)),
-    ("transform", css.transform),
+    ("transform", css.transform->mapOptional(CssValue.Transform.toString)),
+    ("translate", css.translate->mapOptional(CssValue.Translate.toString)),
+    ("rotate", css.rotate->mapOptional(CssValue.Rotate.toString)),
+    ("scale", css.scale->mapOptional(CssValue.Scale.toString)),
+    ("transform-box", css.transformBox->mapOptional(CssValue.TransformBox.toString)),
     ("transform-origin", css.transformOrigin),
     ("transform-style", css.transformStyle),
     ("perspective", css.perspective->mapOptional(CssValue.Length.toString)),
@@ -529,24 +787,42 @@ let effectDeclarations = css =>
     ("backface-visibility", css.backfaceVisibility->mapOptional(CssValue.Visibility.toString)),
     ("clip-path", css.clipPath),
     ("mask", css.mask),
+    ("view-transition-name", css.viewTransitionName),
+    ("view-transition-class", css.viewTransitionClass),
   ]->declarationsFrom
 
 let motionDeclarations = css =>
   [
     ("animation", css.animation),
-    ("animation-delay", css.animationDelay),
+    ("animation-delay", css.animationDelay->mapOptional(CssValue.Time.toString)),
     ("animation-direction", css.animationDirection),
-    ("animation-duration", css.animationDuration),
+    ("animation-duration", css.animationDuration->mapOptional(CssValue.Duration.toString)),
     ("animation-fill-mode", css.animationFillMode),
     ("animation-iteration-count", css.animationIterationCount),
     ("animation-name", css.animationName),
     ("animation-play-state", css.animationPlayState),
-    ("animation-timing-function", css.animationTimingFunction),
+    (
+      "animation-timing-function",
+      css.animationTimingFunction->mapOptional(CssValue.Easing.toString),
+    ),
     ("transition", css.transition),
-    ("transition-delay", css.transitionDelay),
-    ("transition-duration", css.transitionDuration),
+    ("transition-delay", css.transitionDelay->mapOptional(CssValue.Time.toString)),
+    ("transition-duration", css.transitionDuration->mapOptional(CssValue.Duration.toString)),
     ("transition-property", css.transitionProperty),
-    ("transition-timing-function", css.transitionTimingFunction),
+    (
+      "transition-timing-function",
+      css.transitionTimingFunction->mapOptional(CssValue.Easing.toString),
+    ),
+    (
+      "transition-behavior",
+      css.transitionBehavior->mapOptional(CssValue.TransitionBehavior.toString),
+    ),
+    ("offset", css.offset),
+    ("offset-path", css.offsetPath),
+    ("offset-distance", css.offsetDistance->mapOptional(CssValue.Length.toString)),
+    ("offset-position", css.offsetPosition),
+    ("offset-anchor", css.offsetAnchor),
+    ("offset-rotate", css.offsetRotate->mapOptional(CssValue.OffsetRotate.toString)),
   ]->declarationsFrom
 
 let contentDeclarations = css =>
@@ -570,13 +846,28 @@ let contentDeclarations = css =>
     ("quotes", css.quotes),
     ("counter-increment", css.counterIncrement),
     ("counter-reset", css.counterReset),
+    ("fill", css.fill->mapOptional(CssValue.Paint.toString)),
+    ("fill-opacity", css.fillOpacity->mapOptional(CssValue.Alpha.toString)),
+    ("fill-rule", css.fillRule->mapOptional(CssValue.FillRule.toString)),
+    ("stroke", css.stroke->mapOptional(CssValue.Paint.toString)),
+    ("stroke-width", css.strokeWidth->mapOptional(CssValue.Length.toString)),
+    ("stroke-opacity", css.strokeOpacity->mapOptional(CssValue.Alpha.toString)),
+    ("stroke-linecap", css.strokeLinecap->mapOptional(CssValue.StrokeLinecap.toString)),
+    ("stroke-linejoin", css.strokeLinejoin->mapOptional(CssValue.StrokeLinejoin.toString)),
+    ("stroke-dasharray", css.strokeDasharray->mapOptional(CssValue.StrokeDasharray.toString)),
+    ("stroke-dashoffset", css.strokeDashoffset->mapOptional(CssValue.Length.toString)),
+    ("stroke-miterlimit", css.strokeMiterlimit->mapOptional(floatValue)),
+    ("paint-order", css.paintOrder->mapOptional(CssValue.PaintOrder.toString)),
+    ("vector-effect", css.vectorEffect->mapOptional(CssValue.VectorEffect.toString)),
+    ("stop-color", css.stopColor->mapOptional(CssValue.Color.toString)),
+    ("stop-opacity", css.stopOpacity->mapOptional(CssValue.Alpha.toString)),
   ]->declarationsFrom
 
 let interactionDeclarations = css =>
   [
     ("appearance", css.appearance->mapOptional(CssValue.Appearance.toString)),
-    ("accent-color", css.accentColor),
-    ("caret-color", css.caretColor),
+    ("accent-color", css.accentColor->mapOptional(CssValue.Color.toString)),
+    ("caret-color", css.caretColor->mapOptional(CssValue.Color.toString)),
     ("cursor", css.cursor->mapOptional(CssValue.Cursor.toString)),
     ("pointer-events", css.pointerEvents->mapOptional(CssValue.PointerEvents.toString)),
     ("resize", css.resize->mapOptional(CssValue.Resize.toString)),
@@ -584,11 +875,65 @@ let interactionDeclarations = css =>
     ("touch-action", css.touchAction),
     ("scroll-behavior", css.scrollBehavior->mapOptional(CssValue.ScrollBehavior.toString)),
     ("scroll-margin", css.scrollMargin->mapOptional(CssValue.Length.toString)),
+    ("scroll-margin-top", css.scrollMarginTop->mapOptional(CssValue.Length.toString)),
+    ("scroll-margin-right", css.scrollMarginRight->mapOptional(CssValue.Length.toString)),
+    ("scroll-margin-bottom", css.scrollMarginBottom->mapOptional(CssValue.Length.toString)),
+    ("scroll-margin-left", css.scrollMarginLeft->mapOptional(CssValue.Length.toString)),
+    ("scroll-margin-block", css.scrollMarginBlock->mapOptional(CssValue.LengthPair.toString)),
+    (
+      "scroll-margin-block-start",
+      css.scrollMarginBlockStart->mapOptional(CssValue.Length.toString),
+    ),
+    ("scroll-margin-block-end", css.scrollMarginBlockEnd->mapOptional(CssValue.Length.toString)),
+    ("scroll-margin-inline", css.scrollMarginInline->mapOptional(CssValue.LengthPair.toString)),
+    (
+      "scroll-margin-inline-start",
+      css.scrollMarginInlineStart->mapOptional(CssValue.Length.toString),
+    ),
+    ("scroll-margin-inline-end", css.scrollMarginInlineEnd->mapOptional(CssValue.Length.toString)),
     ("scroll-padding", css.scrollPadding->mapOptional(CssValue.Length.toString)),
+    ("scroll-padding-top", css.scrollPaddingTop->mapOptional(CssValue.Length.toString)),
+    ("scroll-padding-right", css.scrollPaddingRight->mapOptional(CssValue.Length.toString)),
+    ("scroll-padding-bottom", css.scrollPaddingBottom->mapOptional(CssValue.Length.toString)),
+    ("scroll-padding-left", css.scrollPaddingLeft->mapOptional(CssValue.Length.toString)),
+    ("scroll-padding-block", css.scrollPaddingBlock->mapOptional(CssValue.LengthPair.toString)),
+    (
+      "scroll-padding-block-start",
+      css.scrollPaddingBlockStart->mapOptional(CssValue.Length.toString),
+    ),
+    ("scroll-padding-block-end", css.scrollPaddingBlockEnd->mapOptional(CssValue.Length.toString)),
+    ("scroll-padding-inline", css.scrollPaddingInline->mapOptional(CssValue.LengthPair.toString)),
+    (
+      "scroll-padding-inline-start",
+      css.scrollPaddingInlineStart->mapOptional(CssValue.Length.toString),
+    ),
+    (
+      "scroll-padding-inline-end",
+      css.scrollPaddingInlineEnd->mapOptional(CssValue.Length.toString),
+    ),
     ("scroll-snap-align", css.scrollSnapAlign),
     ("scroll-snap-stop", css.scrollSnapStop),
     ("scroll-snap-type", css.scrollSnapType),
-    ("overscroll-behavior", css.overscrollBehavior),
+    (
+      "overscroll-behavior",
+      css.overscrollBehavior->mapOptional(CssValue.OverscrollBehavior.toString),
+    ),
+    (
+      "overscroll-behavior-x",
+      css.overscrollBehaviorX->mapOptional(CssValue.OverscrollBehavior.toString),
+    ),
+    (
+      "overscroll-behavior-y",
+      css.overscrollBehaviorY->mapOptional(CssValue.OverscrollBehavior.toString),
+    ),
+    (
+      "overscroll-behavior-block",
+      css.overscrollBehaviorBlock->mapOptional(CssValue.OverscrollBehavior.toString),
+    ),
+    (
+      "overscroll-behavior-inline",
+      css.overscrollBehaviorInline->mapOptional(CssValue.OverscrollBehavior.toString),
+    ),
     ("scrollbar-color", css.scrollbarColor),
     ("scrollbar-width", css.scrollbarWidth),
     ("will-change", css.willChange),
@@ -606,6 +951,21 @@ let columnDeclarations = css =>
     ("container-name", css.containerName),
     ("container-type", css.containerType),
     ("content-visibility", css.contentVisibility),
+    ("container", css.container),
+    (
+      "box-decoration-break",
+      css.boxDecorationBreak->mapOptional(CssValue.BoxDecorationBreak.toString),
+    ),
+    ("break-before", css.breakBefore->mapOptional(CssValue.BreakBetween.toString)),
+    ("break-after", css.breakAfter->mapOptional(CssValue.BreakBetween.toString)),
+    ("break-inside", css.breakInside->mapOptional(CssValue.BreakInside.toString)),
+    ("orphans", css.orphans->mapOptional(intValue)),
+    ("widows", css.widows->mapOptional(intValue)),
+    ("shape-outside", css.shapeOutside),
+    ("shape-margin", css.shapeMargin->mapOptional(CssValue.Length.toString)),
+    ("shape-image-threshold", css.shapeImageThreshold->mapOptional(CssValue.Alpha.toString)),
+    ("field-sizing", css.fieldSizing->mapOptional(CssValue.FieldSizing.toString)),
+    ("interpolate-size", css.interpolateSize->mapOptional(CssValue.InterpolateSize.toString)),
   ]->declarationsFrom
 
 let declarationsFor = css =>
@@ -704,17 +1064,70 @@ let nestedFor = css =>
   ->Array.concat(conditionsFor(css.supports))
   ->Array.concat(conditionsFor(css.containerQueries))
 
-let style = (css: css) => {
+let definitionFor = (css: css): definition => {
   let vars = switch css.vars {
   | Some(value) => value
   | None => []
   }
 
-  register({
+  {
     vars,
     declarations: declarationsFor(css),
     nested: nestedFor(css),
-  })
+  }
 }
+
+type layer = Runtime.layer
+
+let namedLayer = Runtime.namedLayer
+
+let anonymousLayer = Runtime.anonymousLayer
+
+let layerOrder = Runtime.layerOrder
+
+let style = (~layer=Runtime.unlayeredLayer, css: css) => Runtime.style(~layer, definitionFor(css))
+
+let global = (~selector, ~layer=Runtime.unlayeredLayer, css: css) =>
+  Runtime.global(~layer, selector, definitionFor(css))
+
+let frame = (~at, css: css) => Runtime.frame(~at, definitionFor(css))
+
+let keyframes = (~layer=Runtime.unlayeredLayer, frames) => Runtime.keyframes(~layer, frames)
+
+type fontSource = CssFont.source
+type fontFaceDescriptors = CssFont.descriptors
+
+let fontSource = CssFont.fontSource
+
+let localFontSource = CssFont.localFontSource
+
+let fontFace = (~layer=Runtime.unlayeredLayer, descriptors: fontFaceDescriptors) =>
+  switch CssFont.serialize(descriptors) {
+  | Ok({family, cssText}) => Runtime.fontFace(~layer, family, cssText)
+  | Error(error) =>
+    JsError.throwWithMessage(`@jvlk/rescript-css: ${CssFont.validationMessage(error)}`)
+  }
+
+type propertyDescriptors = {
+  name: string,
+  syntax: string,
+  inherits: bool,
+  initialValue: string,
+}
+
+let registerProperty = (~layer=Runtime.unlayeredLayer, descriptors: propertyDescriptors) =>
+  Runtime.registerProperty(
+    ~layer,
+    ~name=descriptors.name,
+    ~syntax=descriptors.syntax,
+    ~inherits=descriptors.inherits,
+    ~initialValue=descriptors.initialValue,
+  )
+
+let scope = (~root, ~limit=?, ~selector, ~layer=Runtime.unlayeredLayer, css: css) =>
+  Runtime.scope(~layer, ~root, ~limit?, ~selector, definitionFor(css))
+
+let page = (~selector=?, ~layer=Runtime.unlayeredLayer, descriptors) =>
+  Runtime.page(~layer, ~selector?, descriptors)
 
 let class = style

@@ -1,0 +1,119 @@
+batch,field,css_name,value_type,status,standards_status,availability,test_case
+typography,colorScheme,color-scheme,string,implemented,standards-track,broad,light dark
+typography,forcedColorAdjust,forced-color-adjust,CssValue.ForcedColorAdjust.t,implemented,standards-track,broad,preserve-parent-color
+typography,printColorAdjust,print-color-adjust,CssValue.PrintColorAdjust.t,implemented,standards-track,new,exact
+typography,fontVariationSettings,font-variation-settings,string,implemented,standards-track,broad,"""wght"" 650"
+typography,fontPalette,font-palette,string,implemented,standards-track,new,--brand-palette
+typography,fontSynthesis,font-synthesis,CssValue.FontSynthesis.t,implemented,standards-track,broad,weight style
+typography,fontSizeAdjust,font-size-adjust,CssValue.FontSizeAdjust.t,implemented,standards-track,new,cap-height 0.7
+typography,textWrap,text-wrap,CssValue.TextWrap.t,implemented,standards-track,new,balance
+typography,textWrapMode,text-wrap-mode,CssValue.TextWrapMode.t,implemented,standards-track,new,nowrap
+typography,textWrapStyle,text-wrap-style,CssValue.TextWrapStyle.t,implemented,standards-track,new,pretty
+typography,textEmphasis,text-emphasis,string,implemented,standards-track,broad,filled sesame red
+typography,textOrientation,text-orientation,CssValue.TextOrientation.t,implemented,standards-track,broad,upright
+typography,unicodeBidi,unicode-bidi,CssValue.UnicodeBidi.t,implemented,standards-track,broad,isolate
+typography,hangingPunctuation,hanging-punctuation,CssValue.HangingPunctuation.t,implemented,standards-track,limited,first allow-end
+typography,lineClamp,line-clamp,CssValue.LineClamp.t,implemented,standards-track,limited,3
+logical-borders,borderBlockStart,border-block-start,string,implemented,standards-track,broad,1px solid red
+logical-borders,borderBlockEnd,border-block-end,string,implemented,standards-track,broad,2px dashed blue
+logical-borders,borderInlineStart,border-inline-start,string,implemented,standards-track,broad,1px dotted green
+logical-borders,borderInlineEnd,border-inline-end,string,implemented,standards-track,broad,3px double black
+logical-borders,borderBlockColor,border-block-color,CssValue.Color.t,implemented,standards-track,broad,red
+logical-borders,borderBlockStartColor,border-block-start-color,CssValue.Color.t,implemented,standards-track,broad,red
+logical-borders,borderBlockEndColor,border-block-end-color,CssValue.Color.t,implemented,standards-track,broad,blue
+logical-borders,borderInlineColor,border-inline-color,CssValue.Color.t,implemented,standards-track,broad,blue
+logical-borders,borderInlineStartColor,border-inline-start-color,CssValue.Color.t,implemented,standards-track,broad,green
+logical-borders,borderInlineEndColor,border-inline-end-color,CssValue.Color.t,implemented,standards-track,broad,black
+logical-borders,borderBlockStyle,border-block-style,CssValue.BorderStyle.t,implemented,standards-track,broad,solid
+logical-borders,borderBlockStartStyle,border-block-start-style,CssValue.BorderStyle.t,implemented,standards-track,broad,solid
+logical-borders,borderBlockEndStyle,border-block-end-style,CssValue.BorderStyle.t,implemented,standards-track,broad,dashed
+logical-borders,borderInlineStyle,border-inline-style,CssValue.BorderStyle.t,implemented,standards-track,broad,dashed
+logical-borders,borderInlineStartStyle,border-inline-start-style,CssValue.BorderStyle.t,implemented,standards-track,broad,dotted
+logical-borders,borderInlineEndStyle,border-inline-end-style,CssValue.BorderStyle.t,implemented,standards-track,broad,double
+logical-borders,borderBlockWidth,border-block-width,CssValue.LogicalBorderWidth.t,implemented,standards-track,broad,2px
+logical-borders,borderBlockStartWidth,border-block-start-width,CssValue.BorderWidthValue.t,implemented,standards-track,broad,1px
+logical-borders,borderBlockEndWidth,border-block-end-width,CssValue.BorderWidthValue.t,implemented,standards-track,broad,2px
+logical-borders,borderInlineWidth,border-inline-width,CssValue.LogicalBorderWidth.t,implemented,standards-track,broad,0.25rem
+logical-borders,borderInlineStartWidth,border-inline-start-width,CssValue.BorderWidthValue.t,implemented,standards-track,broad,1px
+logical-borders,borderInlineEndWidth,border-inline-end-width,CssValue.BorderWidthValue.t,implemented,standards-track,broad,3px
+logical-borders,borderStartStartRadius,border-start-start-radius,CssValue.CornerRadius.t,implemented,standards-track,broad,0.5rem
+logical-borders,borderStartEndRadius,border-start-end-radius,CssValue.CornerRadius.t,implemented,standards-track,broad,0.75rem
+logical-borders,borderEndStartRadius,border-end-start-radius,CssValue.CornerRadius.t,implemented,standards-track,broad,6px
+logical-borders,borderEndEndRadius,border-end-end-radius,CssValue.CornerRadius.t,implemented,standards-track,broad,8px
+scrolling,scrollMarginTop,scroll-margin-top,CssValue.Length.t,implemented,standards-track,broad,8px
+scrolling,scrollMarginRight,scroll-margin-right,CssValue.Length.t,implemented,standards-track,broad,9px
+scrolling,scrollMarginBottom,scroll-margin-bottom,CssValue.Length.t,implemented,standards-track,broad,10px
+scrolling,scrollMarginLeft,scroll-margin-left,CssValue.Length.t,implemented,standards-track,broad,11px
+scrolling,scrollMarginBlock,scroll-margin-block,CssValue.LengthPair.t,implemented,standards-track,broad,1rem
+scrolling,scrollMarginBlockStart,scroll-margin-block-start,CssValue.Length.t,implemented,standards-track,broad,12px
+scrolling,scrollMarginBlockEnd,scroll-margin-block-end,CssValue.Length.t,implemented,standards-track,broad,13px
+scrolling,scrollMarginInline,scroll-margin-inline,CssValue.LengthPair.t,implemented,standards-track,broad,1.25rem
+scrolling,scrollMarginInlineStart,scroll-margin-inline-start,CssValue.Length.t,implemented,standards-track,broad,14px
+scrolling,scrollMarginInlineEnd,scroll-margin-inline-end,CssValue.Length.t,implemented,standards-track,broad,15px
+scrolling,scrollPaddingTop,scroll-padding-top,CssValue.Length.t,implemented,standards-track,broad,16px
+scrolling,scrollPaddingRight,scroll-padding-right,CssValue.Length.t,implemented,standards-track,broad,17px
+scrolling,scrollPaddingBottom,scroll-padding-bottom,CssValue.Length.t,implemented,standards-track,broad,18px
+scrolling,scrollPaddingLeft,scroll-padding-left,CssValue.Length.t,implemented,standards-track,broad,19px
+scrolling,scrollPaddingBlock,scroll-padding-block,CssValue.LengthPair.t,implemented,standards-track,broad,1.5rem
+scrolling,scrollPaddingBlockStart,scroll-padding-block-start,CssValue.Length.t,implemented,standards-track,broad,20px
+scrolling,scrollPaddingBlockEnd,scroll-padding-block-end,CssValue.Length.t,implemented,standards-track,broad,21px
+scrolling,scrollPaddingInline,scroll-padding-inline,CssValue.LengthPair.t,implemented,standards-track,broad,1.75rem
+scrolling,scrollPaddingInlineStart,scroll-padding-inline-start,CssValue.Length.t,implemented,standards-track,broad,22px
+scrolling,scrollPaddingInlineEnd,scroll-padding-inline-end,CssValue.Length.t,implemented,standards-track,broad,23px
+scrolling,overscrollBehaviorX,overscroll-behavior-x,CssValue.OverscrollBehavior.t,implemented,standards-track,broad,contain
+scrolling,overscrollBehaviorY,overscroll-behavior-y,CssValue.OverscrollBehavior.t,implemented,standards-track,broad,none
+scrolling,overscrollBehaviorBlock,overscroll-behavior-block,CssValue.OverscrollBehavior.t,implemented,standards-track,broad,contain
+scrolling,overscrollBehaviorInline,overscroll-behavior-inline,CssValue.OverscrollBehavior.t,implemented,standards-track,broad,auto
+transforms,translate,translate,CssValue.Translate.t,implemented,standards-track,broad,1rem 20%
+transforms,rotate,rotate,CssValue.Rotate.t,implemented,standards-track,broad,x 45deg
+transforms,scale,scale,CssValue.Scale.t,implemented,standards-track,broad,1.2 80%
+transforms,transformBox,transform-box,CssValue.TransformBox.t,implemented,standards-track,broad,fill-box
+transforms,offset,offset,string,implemented,standards-track,partial,"path(""M 0 0 L 100 0"") 50%"
+transforms,offsetPath,offset-path,string,implemented,standards-track,broad,"path(""M 0 0 L 100 0"")"
+transforms,offsetDistance,offset-distance,CssValue.Length.t,implemented,standards-track,broad,50%
+transforms,offsetPosition,offset-position,string,implemented,standards-track,limited,left top
+transforms,offsetAnchor,offset-anchor,string,implemented,standards-track,limited,center
+transforms,offsetRotate,offset-rotate,CssValue.OffsetRotate.t,implemented,standards-track,broad,auto 45deg
+transforms,transitionBehavior,transition-behavior,CssValue.TransitionBehavior.t,implemented,standards-track,new,allow-discrete
+view-anchor,viewTransitionName,view-transition-name,string,implemented,standards-track,new,card-image
+view-anchor,viewTransitionClass,view-transition-class,string,implemented,standards-track,new,card fast-slide
+view-anchor,anchorName,anchor-name,string,implemented,standards-track,new,--trigger
+view-anchor,anchorScope,anchor-scope,string,implemented,standards-track,limited,--trigger
+view-anchor,positionAnchor,position-anchor,string,implemented,standards-track,new,--trigger
+view-anchor,positionArea,position-area,string,implemented,standards-track,new,top span-all
+view-anchor,positionTry,position-try,string,implemented,standards-track,partial,most-width flip-block
+view-anchor,positionTryFallbacks,position-try-fallbacks,string,implemented,standards-track,partial,"--below, flip-block"
+view-anchor,positionTryOrder,position-try-order,CssValue.PositionTryOrder.t,implemented,standards-track,new,most-inline-size
+view-anchor,positionVisibility,position-visibility,CssValue.PositionVisibility.t,implemented,standards-track,partial,anchor-visible no-overflow
+svg,fill,fill,CssValue.Paint.t,implemented,standards-track,broad,#336699
+svg,fillOpacity,fill-opacity,CssValue.Alpha.t,implemented,standards-track,broad,0.6
+svg,fillRule,fill-rule,CssValue.FillRule.t,implemented,standards-track,broad,evenodd
+svg,stroke,stroke,CssValue.Paint.t,implemented,standards-track,broad,currentColor
+svg,strokeWidth,stroke-width,CssValue.Length.t,implemented,standards-track,broad,2px
+svg,strokeOpacity,stroke-opacity,CssValue.Alpha.t,implemented,standards-track,broad,75%
+svg,strokeLinecap,stroke-linecap,CssValue.StrokeLinecap.t,implemented,standards-track,broad,round
+svg,strokeLinejoin,stroke-linejoin,CssValue.StrokeLinejoin.t,implemented,standards-track,broad,bevel
+svg,strokeDasharray,stroke-dasharray,CssValue.StrokeDasharray.t,implemented,standards-track,broad,4px 2px
+svg,strokeDashoffset,stroke-dashoffset,CssValue.Length.t,implemented,standards-track,broad,1px
+svg,strokeMiterlimit,stroke-miterlimit,float,implemented,standards-track,broad,4
+svg,paintOrder,paint-order,CssValue.PaintOrder.t,implemented,standards-track,broad,stroke fill markers
+svg,vectorEffect,vector-effect,CssValue.VectorEffect.t,implemented,standards-track,partial,non-scaling-stroke
+svg,stopColor,stop-color,CssValue.Color.t,implemented,standards-track,broad,gold
+svg,stopOpacity,stop-opacity,CssValue.Alpha.t,implemented,standards-track,broad,0.8
+layout-ui,boxDecorationBreak,box-decoration-break,CssValue.BoxDecorationBreak.t,implemented,standards-track,partial,clone
+layout-ui,breakBefore,break-before,CssValue.BreakBetween.t,implemented,standards-track,partial,avoid-page
+layout-ui,breakAfter,break-after,CssValue.BreakBetween.t,implemented,standards-track,partial,column
+layout-ui,breakInside,break-inside,CssValue.BreakInside.t,implemented,standards-track,partial,avoid-column
+layout-ui,orphans,orphans,int,implemented,standards-track,broad,3
+layout-ui,widows,widows,int,implemented,standards-track,broad,3
+layout-ui,shapeOutside,shape-outside,string,implemented,standards-track,broad,circle(50%)
+layout-ui,shapeMargin,shape-margin,CssValue.Length.t,implemented,standards-track,broad,1rem
+layout-ui,shapeImageThreshold,shape-image-threshold,CssValue.Alpha.t,implemented,standards-track,broad,0.5
+layout-ui,fieldSizing,field-sizing,CssValue.FieldSizing.t,implemented,standards-track,new,content
+layout-ui,interpolateSize,interpolate-size,CssValue.InterpolateSize.t,implemented,standards-track,limited,allow-keywords
+layout-ui,containIntrinsicSize,contain-intrinsic-size,string,implemented,standards-track,partial,auto 300px
+layout-ui,containIntrinsicWidth,contain-intrinsic-width,CssValue.ContainIntrinsicAxis.t,implemented,standards-track,partial,auto 20rem
+layout-ui,containIntrinsicHeight,contain-intrinsic-height,CssValue.ContainIntrinsicAxis.t,implemented,standards-track,partial,none
+layout-ui,containIntrinsicBlockSize,contain-intrinsic-block-size,CssValue.ContainIntrinsicAxis.t,implemented,standards-track,partial,auto 24rem
+layout-ui,containIntrinsicInlineSize,contain-intrinsic-inline-size,CssValue.ContainIntrinsicAxis.t,implemented,standards-track,partial,18rem
+layout-ui,container,container,string,implemented,standards-track,broad,sidebar / inline-size
