@@ -1706,6 +1706,13 @@ export const rescriptCss = (): Plugin => {
         return null;
       }
 
+      const stylesheetImport = stylesheetImportFor(id, matcher.cssFilePathFor(id));
+
+      // Vite 8 invokes this hook after configResolved has already generated the stylesheet.
+      if (source.includes(stylesheetImport)) {
+        return null;
+      }
+
       const moduleBinding = matcher.cssModuleBindingFor(source);
 
       if (moduleBinding === undefined) {

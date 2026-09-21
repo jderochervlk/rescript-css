@@ -1,0 +1,14 @@
+.rc_1pg98jp_0 {
+  display: grid;
+  max-width: 32rem;
+  margin: auto;
+  padding: 1.5rem;
+  gap: 0.75rem;
+  color: #0f172a;
+  background: #ecfeff;
+  border-radius: 8px;
+}
+
+.rc_1pg98jp_0:hover {
+  background: #cffafe;
+}

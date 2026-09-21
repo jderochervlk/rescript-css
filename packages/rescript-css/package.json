@@ -37,7 +37,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "rescript build && vite build && tsc --emitDeclarationOnly --project tsconfig.json",
+    "build": "rescript clean && rescript build && vite build && tsc --emitDeclarationOnly --project tsconfig.json",
     "prepack": "pnpm run build",
     "prepublishOnly": "pnpm --dir ../.. format:check && pnpm --dir ../.. typecheck && pnpm --dir ../.. test",
     "typecheck": "tsc --noEmit --project tsconfig.json"
@@ -46,12 +46,13 @@
     "@rescript/runtime": "^12.0.0"
   },
   "devDependencies": {
-    "vite": "^7.0.0"
+    "rescript": "11.1.4",
+    "vite": "^8.3.0"
   },
   "peerDependencies": {
-    "vite": "^7.0.0"
+    "vite": ">=7.0.0 <9.0.0"
   },
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": ">=24.12.0"
   }
 }

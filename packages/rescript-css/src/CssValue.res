@@ -1,6 +1,6 @@
-let floatWithUnit = (value, unit) => `${value->Float.toString}${unit}`
-let intWithUnit = (value, unit) => `${value->Int.toString}${unit}`
-let floatToString = value => value->Float.toString
+let floatWithUnit = (value, unit) => `${Compat.floatToString(value)}${unit}`
+let intWithUnit = (value, unit) => `${Compat.intToString(value)}${unit}`
+let floatToString = value => Compat.floatToString(value)
 
 module Length = {
   type t =
@@ -137,7 +137,7 @@ module Color = {
     | Transparent => "transparent"
     | CurrentColor => "currentColor"
     | Named(value) => value
-    | Hex(value) => value->String.startsWith("#") ? value : `#${value}`
+    | Hex(value) => Compat.stringStartsWith(value, "#") ? value : `#${value}`
     | Rgb(value) => value->rgbToString
     | Hsl(value) => value->hslToString
     | Oklch(value) => value->oklchToString
@@ -163,7 +163,7 @@ module Time: {
   type t = Ms(finite) | S(finite) | Zero | Var(string) | Raw(string)
 
   let validate = (constructor, value) =>
-    value->Float.isFinite ? Ok(constructor(value)) : Error(NonFinite(value))
+    Compat.floatIsFinite(value) ? Ok(constructor(value)) : Error(NonFinite(value))
 
   let ms = value => validate(value => Ms(value), value)
   let seconds = value => validate(value => S(value), value)
@@ -198,7 +198,7 @@ module Duration: {
   type t = Ms(nonNegative) | S(nonNegative) | Zero | Var(string) | Raw(string)
 
   let validate = (constructor, value) =>
-    if !(value->Float.isFinite) {
+    if !Compat.floatIsFinite(value) {
       Error(NonFinite(value))
     } else if value < 0.0 {
       Error(Negative(value))
@@ -314,11 +314,12 @@ module Easing: {
     | Raw(string)
 
   let linearStop = (~output, ~position=?) =>
-    if !(output->Float.isFinite) {
+    if !Compat.floatIsFinite(output) {
       Error(NonFiniteLinearOutput(output))
     } else {
       switch position {
-      | Some(position) if !(position->Float.isFinite) => Error(NonFiniteLinearPosition(position))
+      | Some(position) if !Compat.floatIsFinite(position) =>
+        Error(NonFiniteLinearPosition(position))
       | Some(position) if position < 0.0 || position > 100.0 =>
         Error(LinearPositionOutOfRange(position))
       | _ => Ok({output, ?position})
@@ -329,7 +330,7 @@ module Easing: {
     stops->Array.length < 2 ? Error(LinearFunctionRequiresTwoStops) : Ok(LinearFunction(stops))
 
   let cubicBezier = (~x1, ~y1, ~x2, ~y2) =>
-    switch [x1, y1, x2, y2]->Array.find(controlPoint => !(controlPoint->Float.isFinite)) {
+    switch [x1, y1, x2, y2]->Compat.arrayFind(controlPoint => !Compat.floatIsFinite(controlPoint)) {
     | Some(controlPoint) => Error(NonFiniteControlPoint(controlPoint))
     | None if x1 < 0.0 || x1 > 1.0 => Error(CubicBezierXOutOfRange(x1))
     | None if x2 < 0.0 || x2 > 1.0 => Error(CubicBezierXOutOfRange(x2))
@@ -370,8 +371,10 @@ module Easing: {
     | EaseInOut => "ease-in-out"
     | CubicBezier({x1, y1, x2, y2}) =>
       `cubic-bezier(${x1->floatToString}, ${y1->floatToString}, ${x2->floatToString}, ${y2->floatToString})`
-    | Steps({count, position}) => `steps(${count->Int.toString}, ${position->stepPositionToString})`
-    | LinearFunction(stops) => `linear(${stops->Array.map(linearStopToString)->Array.join(", ")})`
+    | Steps({count, position}) =>
+      `steps(${Compat.intToString(count)}, ${position->stepPositionToString})`
+    | LinearFunction(stops) =>
+      `linear(${stops->Compat.arrayMap(linearStopToString)->Compat.arrayJoin(", ")})`
     | Var(value)
     | Raw(value) => value
     }
@@ -410,7 +413,7 @@ module TrackLength: {
     | Pt(value)
     | Pc(value) =>
       Some(value)
-    | Px(value) => Some(value->Float.fromInt)
+    | Px(value) => Some(Compat.floatFromInt(value))
     | Zero => Some(0.0)
     | Var(_)
     | Raw(_) =>
@@ -426,7 +429,7 @@ module TrackLength: {
     switch (value, value->numericValue) {
     | (Var(_) | Raw(_), _) => Ok(value)
     | (Auto | MinContent | MaxContent | FitContent, _) => Error(UnsupportedLength)
-    | (_, Some(number)) if !(number->Float.isFinite) => Error(NonFiniteLength)
+    | (_, Some(number)) if !Compat.floatIsFinite(number) => Error(NonFiniteLength)
     | (_, Some(number)) if number < 0.0 => Error(NegativeLength)
     | (_, Some(_)) => Ok(value)
     | (_, None) => Error(UnsupportedLength)
@@ -446,7 +449,7 @@ module TrackFraction: {
   type t = float
 
   let make = value =>
-    if !(value->Float.isFinite) {
+    if !Compat.floatIsFinite(value) {
       Error(NonFiniteFraction)
     } else if value < 0.0 {
       Error(NegativeFraction)
@@ -553,7 +556,7 @@ module RepeatCount: {
   type t = int
 
   let make = value => value > 0 ? Ok(value) : Error(NonPositiveCount(value))
-  let toString = value => value->Int.toString
+  let toString = value => Compat.intToString(value)
 }
 
 module TrackList = {
@@ -572,13 +575,13 @@ module TrackList = {
   let repeatItemToString = item =>
     switch item {
     | RepeatBreadth(value) => value->TrackBreadth.toString
-    | RepeatLineNames(names) => `[${names->Array.join(" ")}]`
+    | RepeatLineNames(names) => `[${names->Compat.arrayJoin(" ")}]`
     }
 
   let fixedRepeatItemToString = item =>
     switch item {
     | FixedBreadth(value) => value->FixedTrackSize.toString
-    | FixedLineNames(names) => `[${names->Array.join(" ")}]`
+    | FixedLineNames(names) => `[${names->Compat.arrayJoin(" ")}]`
     }
 
   let itemToString = item =>
@@ -586,26 +589,26 @@ module TrackList = {
     | Breadth(value) => value->TrackBreadth.toString
     | Repeat(count, items) =>
       `repeat(${count->RepeatCount.toString}, ${items
-        ->Array.map(repeatItemToString)
-        ->Array.join(" ")})`
+        ->Compat.arrayMap(repeatItemToString)
+        ->Compat.arrayJoin(" ")})`
     | AutoRepeat(count, items) =>
       let count = switch count {
       | AutoFill => "auto-fill"
       | AutoFit => "auto-fit"
       }
-      `repeat(${count}, ${items->Array.map(fixedRepeatItemToString)->Array.join(" ")})`
-    | LineNames(names) => `[${names->Array.join(" ")}]`
+      `repeat(${count}, ${items->Compat.arrayMap(fixedRepeatItemToString)->Compat.arrayJoin(" ")})`
+    | LineNames(names) => `[${names->Compat.arrayJoin(" ")}]`
     }
 
   let subgridLineNames = names =>
     switch names {
     | [] => "subgrid"
-    | names => `subgrid ${names->Array.map(name => `[${name}]`)->Array.join(" ")}`
+    | names => `subgrid ${names->Compat.arrayMap(name => `[${name}]`)->Compat.arrayJoin(" ")}`
     }
 
   let toString = value =>
     switch value {
-    | Tracks(items) => items->Array.map(itemToString)->Array.join(" ")
+    | Tracks(items) => items->Compat.arrayMap(itemToString)->Compat.arrayJoin(" ")
     | Subgrid(names) => subgridLineNames(names)
     | Var(value)
     | Raw(value) => value
@@ -617,7 +620,7 @@ module AutoTrackList = {
 
   let toString = value =>
     switch value {
-    | Tracks(items) => items->Array.map(TrackBreadth.toString)->Array.join(" ")
+    | Tracks(items) => items->Compat.arrayMap(TrackBreadth.toString)->Compat.arrayJoin(" ")
     | Var(value)
     | Raw(value) => value
     }
@@ -677,7 +680,7 @@ module BorderLength: {
     | Mm(value)
     | In(value)
     | Pt(value)
-    | Pc(value) if !(value->Float.isFinite) =>
+    | Pc(value) if !Compat.floatIsFinite(value) =>
       Error(NonFiniteLength)
     | Rem(value)
     | Em(value)
@@ -928,7 +931,7 @@ module Transform = {
     | Perspective(value) => `perspective(${value->length})`
     | Matrix(a, b, c, d, tx, ty) =>
       `matrix(${a->floatToString}, ${b->floatToString}, ${c->floatToString}, ${d->floatToString}, ${tx->floatToString}, ${ty->floatToString})`
-    | Transforms(values) => values->Array.map(toString)->Array.join(" ")
+    | Transforms(values) => values->Compat.arrayMap(toString)->Compat.arrayJoin(" ")
     | Var(value)
     | Raw(value) => value
     }
@@ -1184,7 +1187,7 @@ module FontWeight = {
     | Bold => "bold"
     | Bolder => "bolder"
     | Lighter => "lighter"
-    | Weight(value) => value->Int.toString
+    | Weight(value) => Compat.intToString(value)
     | Var(value)
     | Raw(value) => value
     }
@@ -1633,7 +1636,7 @@ module LineClamp = {
   let toString = value =>
     switch value {
     | None => "none"
-    | Lines(value) => value->Int.toString
+    | Lines(value) => Compat.intToString(value)
     | Var(value)
     | Raw(value) => value
     }
@@ -1654,7 +1657,7 @@ module FontSynthesis = {
   let toString = value =>
     switch value {
     | None => "none"
-    | Values(values) => values->Array.map(keywordToString)->Array.join(" ")
+    | Values(values) => values->Compat.arrayMap(keywordToString)->Compat.arrayJoin(" ")
     | Var(value)
     | Raw(value) => value
     }
@@ -1707,7 +1710,7 @@ module HangingPunctuation = {
   let toString = value =>
     switch value {
     | None => "none"
-    | Values(values) => values->Array.map(keywordToString)->Array.join(" ")
+    | Values(values) => values->Compat.arrayMap(keywordToString)->Compat.arrayJoin(" ")
     | Var(value)
     | Raw(value) => value
     }
@@ -1899,7 +1902,7 @@ module PositionVisibility = {
   let toString = value =>
     switch value {
     | Always => "always"
-    | Conditions(values) => values->Array.map(conditionToString)->Array.join(" ")
+    | Conditions(values) => values->Compat.arrayMap(conditionToString)->Compat.arrayJoin(" ")
     | Var(value)
     | Raw(value) => value
     }
@@ -1985,7 +1988,7 @@ module StrokeDasharray = {
   let toString = value =>
     switch value {
     | None => "none"
-    | Values(values) => values->Array.map(Length.toString)->Array.join(" ")
+    | Values(values) => values->Compat.arrayMap(Length.toString)->Compat.arrayJoin(" ")
     | Var(value)
     | Raw(value) => value
     }
@@ -2005,7 +2008,7 @@ module PaintOrder = {
   let toString = value =>
     switch value {
     | Normal => "normal"
-    | Values(values) => values->Array.map(componentToString)->Array.join(" ")
+    | Values(values) => values->Compat.arrayMap(componentToString)->Compat.arrayJoin(" ")
     | Var(value)
     | Raw(value) => value
     }

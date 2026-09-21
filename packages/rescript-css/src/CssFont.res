@@ -89,8 +89,8 @@ let quote = value => {
 let isEmpty = value => value->String.trim->String.length === 0
 
 let hasUnsafeBoundary = value =>
-  [";", "{", "}", "\n", "\r", "\u000C", "/*", "*/"]->Array.some(boundary =>
-    value->String.includes(boundary)
+  [";", "{", "}", "\n", "\r", "\u000C", "/*", "*/"]->Compat.arraySome(boundary =>
+    Compat.stringIncludes(value, boundary)
   )
 
 let descriptorValidationError = ((name, value)) =>
@@ -112,7 +112,7 @@ let sourceValidationError = source =>
       switch format {
       | Some(format) if format->isEmpty => Some(EmptySource("format"))
       | _ =>
-        tech->Array.findMap(value =>
+        tech->Compat.arrayFindMap(value =>
           if value->isEmpty {
             Some(EmptySource("technology"))
           } else if !(technologyPattern->testRegex(value)) {
@@ -131,14 +131,14 @@ let validationError = (descriptors: descriptors) =>
   } else if descriptors.src->Array.length === 0 {
     Some(EmptySources)
   } else {
-    switch descriptors.src->Array.findMap(sourceValidationError) {
+    switch descriptors.src->Compat.arrayFindMap(sourceValidationError) {
     | Some(error) => Some(error)
     | None =>
       [
-        ("font-style", descriptors.style->Option.map(Style.toString)),
+        ("font-style", descriptors.style->Compat.optionMap(Style.toString)),
         ("font-weight", descriptors.weight),
         ("font-stretch", descriptors.stretch),
-        ("font-display", descriptors.display->Option.map(Display.toString)),
+        ("font-display", descriptors.display->Compat.optionMap(Display.toString)),
         ("unicode-range", descriptors.unicodeRange),
         ("font-feature-settings", descriptors.featureSettings),
         ("font-variation-settings", descriptors.variationSettings),
@@ -147,8 +147,8 @@ let validationError = (descriptors: descriptors) =>
         ("line-gap-override", descriptors.lineGapOverride),
         ("size-adjust", descriptors.sizeAdjust),
       ]
-      ->Array.filterMap(((name, value)) => value->Option.map(value => (name, value)))
-      ->Array.findMap(descriptorValidationError)
+      ->Compat.arrayFilterMap(((name, value)) => value->Compat.optionMap(value => (name, value)))
+      ->Compat.arrayFindMap(descriptorValidationError)
     }
   }
 
@@ -162,23 +162,23 @@ let sourceToString = source =>
       }
       let techHint = switch tech {
       | [] => ""
-      | values => ` tech(${values->Array.join(", ")})`
+      | values => ` tech(${values->Compat.arrayJoin(", ")})`
       }
       `url(${url->quote})${formatHint}${techHint}`
     }
   }
 
-let optionalDeclaration = (name, value) => value->Option.map(value => `  ${name}: ${value};`)
+let optionalDeclaration = (name, value) => value->Compat.optionMap(value => `  ${name}: ${value};`)
 
 let stylesheetFor = (descriptors: descriptors) => {
   let family = descriptors.family->quote
-  let sources = descriptors.src->Array.map(sourceToString)->Array.join(", ")
+  let sources = descriptors.src->Compat.arrayMap(sourceToString)->Compat.arrayJoin(", ")
   let optionalDeclarations =
     [
-      optionalDeclaration("font-style", descriptors.style->Option.map(Style.toString)),
+      optionalDeclaration("font-style", descriptors.style->Compat.optionMap(Style.toString)),
       optionalDeclaration("font-weight", descriptors.weight),
       optionalDeclaration("font-stretch", descriptors.stretch),
-      optionalDeclaration("font-display", descriptors.display->Option.map(Display.toString)),
+      optionalDeclaration("font-display", descriptors.display->Compat.optionMap(Display.toString)),
       optionalDeclaration("unicode-range", descriptors.unicodeRange),
       optionalDeclaration("font-feature-settings", descriptors.featureSettings),
       optionalDeclaration("font-variation-settings", descriptors.variationSettings),
@@ -186,10 +186,10 @@ let stylesheetFor = (descriptors: descriptors) => {
       optionalDeclaration("descent-override", descriptors.descentOverride),
       optionalDeclaration("line-gap-override", descriptors.lineGapOverride),
       optionalDeclaration("size-adjust", descriptors.sizeAdjust),
-    ]->Array.filterMap(value => value)
+    ]->Compat.arrayFilterMap(value => value)
   let declarations =
-    [`  font-family: ${family};`, `  src: ${sources};`]->Array.concat(optionalDeclarations)
-  {family, cssText: `@font-face {\n${declarations->Array.join("\n")}\n}\n`}
+    [`  font-family: ${family};`, `  src: ${sources};`]->Compat.arrayConcat(optionalDeclarations)
+  {family, cssText: `@font-face {\n${declarations->Compat.arrayJoin("\n")}\n}\n`}
 }
 
 let serialize = (descriptors: descriptors) =>

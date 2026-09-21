@@ -1,0 +1,21 @@
+{
+  "name": "example-rescript-13-preview",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm run rescript:build && node scripts/build-vite.mjs",
+    "rescript:build": "pnpm run rescript:package && rescript clean && rescript build",
+    "rescript:package": "cd ../../packages/rescript-css && ../../examples/rescript-13-preview/node_modules/.bin/rescript build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@jvlk/rescript-css": "workspace:*"
+  },
+  "devDependencies": {
+    "rescript": "13.0.0-alpha.6",
+    "vite": "^8.3.0"
+  },
+  "engines": {
+    "node": ">=24.12.0"
+  }
+}

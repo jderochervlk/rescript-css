@@ -3,4 +3,5 @@ dist/
 lib/
 *.res.js
 !examples/**/*.res.js
+packages/rescript-css/src/*.res.mjs
 coverage/

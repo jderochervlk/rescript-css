@@ -5,4 +5,10 @@ packages:
 allowBuilds:
   esbuild: true
   lefthook: true
+  rescript: true
   xote: true
+
+packageExtensions:
+  xote@7.1.0:
+    dependencies:
+      '@rescript/runtime': 12.3.1
