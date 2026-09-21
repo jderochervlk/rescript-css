@@ -18,10 +18,11 @@
     "package:check": "pnpm run build && node scripts/verify-package.mjs",
     "prepare": "lefthook install",
     "rescript": "pnpm --filter @jvlk/rescript-css exec rescript build && pnpm --filter example-basic exec rescript build && pnpm --filter example-react exec rescript build && pnpm --filter example-xote exec rescript build",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage --coverage.exclude='packages/rescript-css/src/*.res.js'",
+    "rescript:package": "pnpm --filter @jvlk/rescript-css exec rescript build",
+    "test": "pnpm run rescript:package && vitest run",
+    "test:coverage": "pnpm run rescript:package && vitest run --coverage --coverage.exclude='packages/rescript-css/src/*.res.js'",
     "tsc": "pnpm --filter @jvlk/rescript-css exec tsc --noEmit --project tsconfig.json",
-    "typecheck": "pnpm --filter @jvlk/rescript-css run typecheck && vitest --run --typecheck"
+    "typecheck": "pnpm run rescript:package && pnpm --filter @jvlk/rescript-css run typecheck && vitest --run --typecheck"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
