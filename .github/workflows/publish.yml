@@ -31,6 +31,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       changed: ${{ steps.package.outputs.changed }}
+      increased: ${{ steps.package.outputs.increased }}
       stable: ${{ steps.package.outputs.stable }}
     steps:
       - name: Check out repository
@@ -51,17 +52,92 @@ jobs:
             previous_version="$(git show "${PREVIOUS_SHA}:packages/rescript-css/package.json" | node --print "JSON.parse(require('node:fs').readFileSync(0, 'utf8')).version")"
           fi
 
-          if [ "${current_version}" = "${previous_version}" ]; then
-            printf 'changed=false\n' >> "${GITHUB_OUTPUT}"
-          else
-            printf 'changed=true\n' >> "${GITHUB_OUTPUT}"
-          fi
+          CURRENT_VERSION="${current_version}" PREVIOUS_VERSION="${previous_version}" node --input-type=module <<'NODE'
+          import {writeFileSync} from "node:fs"
 
-          if [[ "${current_version}" == *-* ]]; then
-            printf 'stable=false\n' >> "${GITHUB_OUTPUT}"
-          else
-            printf 'stable=true\n' >> "${GITHUB_OUTPUT}"
-          fi
+          const semverPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u
+          const numericIdentifierPattern = /^\d+$/u
+
+          const parseVersion = value => {
+            const match = semverPattern.exec(value)
+            if (match === null) {
+              return {_tag: "Invalid", value}
+            }
+
+            const prerelease = match[4]?.split(".") ?? []
+            const hasInvalidNumericIdentifier = prerelease.some(
+              identifier => numericIdentifierPattern.test(identifier) && identifier.length > 1 && identifier.startsWith("0"),
+            )
+
+            return hasInvalidNumericIdentifier
+              ? {_tag: "Invalid", value}
+              : {
+                  _tag: "Version",
+                  value,
+                  major: Number(match[1]),
+                  minor: Number(match[2]),
+                  patch: Number(match[3]),
+                  prerelease,
+                }
+          }
+
+          const compareIdentifier = (left, right) => {
+            if (left === right) {
+              return 0
+            }
+
+            const leftIsNumeric = numericIdentifierPattern.test(left)
+            const rightIsNumeric = numericIdentifierPattern.test(right)
+            if (leftIsNumeric && rightIsNumeric) {
+              return Number(left) < Number(right) ? -1 : 1
+            }
+            if (leftIsNumeric !== rightIsNumeric) {
+              return leftIsNumeric ? -1 : 1
+            }
+            return left < right ? -1 : 1
+          }
+
+          const comparePrerelease = (left, right) => {
+            if (left.length === 0 || right.length === 0) {
+              return left.length === right.length ? 0 : left.length === 0 ? 1 : -1
+            }
+
+            for (let index = 0; index < Math.min(left.length, right.length); index += 1) {
+              const comparison = compareIdentifier(left[index], right[index])
+              if (comparison !== 0) {
+                return comparison
+              }
+            }
+            return left.length === right.length ? 0 : left.length < right.length ? -1 : 1
+          }
+
+          const compareVersions = (left, right) => {
+            const coreComparison = ["major", "minor", "patch"]
+              .map(field => left[field] - right[field])
+              .find(comparison => comparison !== 0)
+            return coreComparison === undefined ? comparePrerelease(left.prerelease, right.prerelease) : coreComparison
+          }
+
+          const current = parseVersion(process.env.CURRENT_VERSION)
+          const previous = process.env.PREVIOUS_VERSION === "" ? {_tag: "Absent"} : parseVersion(process.env.PREVIOUS_VERSION)
+          const invalidVersions = [current, previous].filter(version => version._tag === "Invalid")
+
+          if (invalidVersions.length > 0) {
+            console.error(`Invalid semantic version: ${invalidVersions.map(version => version.value).join(", ")}`)
+            process.exitCode = 1
+          } else {
+            const currentVersion = current
+            const previousVersion = previous
+            const isStable = currentVersion.prerelease.length === 0
+            const isChanged = previousVersion._tag === "Absent" || currentVersion.value !== previousVersion.value
+            const isIncreased = previousVersion._tag === "Absent" || compareVersions(currentVersion, previousVersion) > 0
+            writeFileSync(
+              process.env.GITHUB_OUTPUT,
+              `changed=${isChanged}\nincreased=${isIncreased}\nstable=${isStable}\n`,
+              {encoding: "utf8", flag: "a"},
+            )
+          }
+          NODE
 
   publish:
     name: Publish to npm
@@ -69,7 +145,7 @@ jobs:
     if: >-
       always() && (
         (github.event_name == 'release' && github.event.release.prerelease == false) ||
-        (github.event_name == 'push' && needs.version.outputs.changed == 'true' && needs.version.outputs.stable == 'true')
+        (github.event_name == 'push' && needs.version.outputs.changed == 'true' && needs.version.outputs.increased == 'true' && needs.version.outputs.stable == 'true')
       )
     runs-on: ubuntu-latest
     timeout-minutes: 15
