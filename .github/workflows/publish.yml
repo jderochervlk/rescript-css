@@ -240,6 +240,40 @@ jobs:
             exit 1
           fi
 
+      - name: Inspect existing GitHub Release
+        id: release
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          tag="v${VERSION}"
+          repository_name="${GITHUB_REPOSITORY#*/}"
+          release_status="$(gh api graphql \
+            -f query='query($owner: String!, $name: String!, $tag: String!) {
+              repository(owner: $owner, name: $name) {
+                release(tagName: $tag) {
+                  isDraft
+                  isPrerelease
+                }
+              }
+            }' \
+            -f owner="${GITHUB_REPOSITORY_OWNER}" \
+            -f name="${repository_name}" \
+            -f tag="${tag}" \
+            --jq 'if .data.repository.release == null then "missing" elif .data.repository.release.isDraft or .data.repository.release.isPrerelease then "incomplete" else "published" end')"
+
+          if [ "${release_status}" = "incomplete" ]; then
+            printf 'GitHub Release %s exists but is a draft or prerelease.\n' "${tag}"
+            exit 1
+          fi
+          if [ "${release_status}" = "published" ]; then
+            printf 'published=true\n' >> "${GITHUB_OUTPUT}"
+          else
+            printf 'published=false\n' >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Check formatting
         run: pnpm format:check
 
@@ -275,18 +309,13 @@ jobs:
         run: echo "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }} is already published."
 
       - name: Create GitHub Release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release.outputs.published == 'false'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.package.outputs.version }}
         run: |
           tag="v${VERSION}"
-          if gh release view "${tag}" >/dev/null 2>&1; then
-            printf 'GitHub Release %s already exists.\n' "${tag}"
-            exit 0
-          fi
-
           gh release create "${tag}" \
             --target "${GITHUB_SHA}" \
             --title "${tag}" \
