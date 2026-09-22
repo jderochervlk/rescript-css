@@ -42,8 +42,10 @@ The command registers these values on npm:
 | Workflow filename    | `publish.yml`  |
 | Environment          | `npm`          |
 
-Create an `npm` environment in the GitHub repository. Required reviewers and tag deployment rules
-are recommended so a release cannot publish without an explicit approval.
+Create an `npm` environment in the GitHub repository. Required reviewers are recommended so a
+release cannot publish without an explicit approval. If deployment branch or tag restrictions are
+enabled, they must allow `main`: the workflow publishes from `main` and creates the release tag
+after publishing. A tag-only policy blocks the automatic release path.
 
 Once trusted publishing succeeds, configure npm to reject token-based package publishing. The
 workflow uses GitHub's short-lived OIDC identity and does not need an npm token or repository
