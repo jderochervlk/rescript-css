@@ -1,16 +1,21 @@
 name: Publish
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - packages/rescript-css/package.json
   release:
     types:
       - published
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
-  group: publish-${{ github.event.release.tag_name }}
+  group: publish-${{ github.event.release.tag_name || github.sha }}
   cancel-in-progress: false
 
 env:
@@ -19,9 +24,129 @@ env:
   NPM_VERSION: 11.15.0
 
 jobs:
+  version:
+    name: Detect package version change
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.package.outputs.changed }}
+      increased: ${{ steps.package.outputs.increased }}
+      stable: ${{ steps.package.outputs.stable }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Compare package versions
+        id: package
+        shell: bash
+        env:
+          PREVIOUS_SHA: ${{ github.event.before }}
+        run: |
+          current_version="$(node --print "require('./packages/rescript-css/package.json').version")"
+          previous_version=""
+
+          if git cat-file -e "${PREVIOUS_SHA}:packages/rescript-css/package.json" 2>/dev/null; then
+            previous_version="$(git show "${PREVIOUS_SHA}:packages/rescript-css/package.json" | node --print "JSON.parse(require('node:fs').readFileSync(0, 'utf8')).version")"
+          fi
+
+          CURRENT_VERSION="${current_version}" PREVIOUS_VERSION="${previous_version}" node --input-type=module <<'NODE'
+          import {writeFileSync} from "node:fs"
+
+          const semverPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u
+          const numericIdentifierPattern = /^\d+$/u
+
+          const parseVersion = value => {
+            const match = semverPattern.exec(value)
+            if (match === null) {
+              return {_tag: "Invalid", value}
+            }
+
+            const prerelease = match[4]?.split(".") ?? []
+            const hasInvalidNumericIdentifier = prerelease.some(
+              identifier => numericIdentifierPattern.test(identifier) && identifier.length > 1 && identifier.startsWith("0"),
+            )
+
+            return hasInvalidNumericIdentifier
+              ? {_tag: "Invalid", value}
+              : {
+                  _tag: "Version",
+                  value,
+                  major: Number(match[1]),
+                  minor: Number(match[2]),
+                  patch: Number(match[3]),
+                  prerelease,
+                }
+          }
+
+          const compareIdentifier = (left, right) => {
+            if (left === right) {
+              return 0
+            }
+
+            const leftIsNumeric = numericIdentifierPattern.test(left)
+            const rightIsNumeric = numericIdentifierPattern.test(right)
+            if (leftIsNumeric && rightIsNumeric) {
+              return Number(left) < Number(right) ? -1 : 1
+            }
+            if (leftIsNumeric !== rightIsNumeric) {
+              return leftIsNumeric ? -1 : 1
+            }
+            return left < right ? -1 : 1
+          }
+
+          const comparePrerelease = (left, right) => {
+            if (left.length === 0 || right.length === 0) {
+              return left.length === right.length ? 0 : left.length === 0 ? 1 : -1
+            }
+
+            for (let index = 0; index < Math.min(left.length, right.length); index += 1) {
+              const comparison = compareIdentifier(left[index], right[index])
+              if (comparison !== 0) {
+                return comparison
+              }
+            }
+            return left.length === right.length ? 0 : left.length < right.length ? -1 : 1
+          }
+
+          const compareVersions = (left, right) => {
+            const coreComparison = ["major", "minor", "patch"]
+              .map(field => left[field] - right[field])
+              .find(comparison => comparison !== 0)
+            return coreComparison === undefined ? comparePrerelease(left.prerelease, right.prerelease) : coreComparison
+          }
+
+          const current = parseVersion(process.env.CURRENT_VERSION)
+          const previous = process.env.PREVIOUS_VERSION === "" ? {_tag: "Absent"} : parseVersion(process.env.PREVIOUS_VERSION)
+          const invalidVersions = [current, previous].filter(version => version._tag === "Invalid")
+
+          if (invalidVersions.length > 0) {
+            console.error(`Invalid semantic version: ${invalidVersions.map(version => version.value).join(", ")}`)
+            process.exitCode = 1
+          } else {
+            const currentVersion = current
+            const previousVersion = previous
+            const isStable = currentVersion.prerelease.length === 0
+            const isChanged = previousVersion._tag === "Absent" || currentVersion.value !== previousVersion.value
+            const isIncreased = previousVersion._tag === "Absent" || compareVersions(currentVersion, previousVersion) > 0
+            writeFileSync(
+              process.env.GITHUB_OUTPUT,
+              `changed=${isChanged}\nincreased=${isIncreased}\nstable=${isStable}\n`,
+              {encoding: "utf8", flag: "a"},
+            )
+          }
+          NODE
+
   publish:
     name: Publish to npm
-    if: github.event.release.prerelease == false
+    needs: version
+    if: >-
+      always() && (
+        (github.event_name == 'release' && github.event.release.prerelease == false) ||
+        (github.event_name == 'push' && needs.version.outputs.changed == 'true' && needs.version.outputs.increased == 'true' && needs.version.outputs.stable == 'true')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
@@ -64,19 +189,90 @@ jobs:
             exit 1
           fi
 
-      - name: Verify release tag
+      - name: Read package details
         id: package
         shell: bash
         run: |
           name="$(node --print "require('./packages/rescript-css/package.json').name")"
           version="$(node --print "require('./packages/rescript-css/package.json').version")"
-          expected_tag="v${version}"
-          if [ "${GITHUB_REF_NAME}" != "${expected_tag}" ]; then
-            printf 'Release tag %s does not match package version %s.\n' "${GITHUB_REF_NAME}" "${version}"
-            exit 1
-          fi
           printf 'name=%s\n' "${name}" >> "${GITHUB_OUTPUT}"
           printf 'version=%s\n' "${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify release tag
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          expected_tag="v${VERSION}"
+          if [ "${GITHUB_REF_NAME}" != "${expected_tag}" ]; then
+            printf 'Release tag %s does not match package version %s.\n' "${GITHUB_REF_NAME}" "${VERSION}"
+            exit 1
+          fi
+
+      - name: Verify existing release tag target
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          tag="v${VERSION}"
+          tag_reference="$(gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${tag}" --jq "map(select(.ref == \"refs/tags/${tag}\")) | if length == 0 then \"\" else .[0].object.type + \" \" + .[0].object.sha end")"
+          if [ -z "${tag_reference}" ]; then
+            exit 0
+          fi
+
+          tag_type="${tag_reference%% *}"
+          tag_sha="${tag_reference#* }"
+          if [ "${tag_type}" = "tag" ]; then
+            tag_target="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" --jq '.object.type + " " + .object.sha')"
+            tag_type="${tag_target%% *}"
+            tag_sha="${tag_target#* }"
+          fi
+
+          if [ "${tag_type}" != "commit" ]; then
+            printf 'Tag %s has unsupported target type %s.\n' "${tag}" "${tag_type}"
+            exit 1
+          fi
+          if [ "${tag_sha}" != "${GITHUB_SHA}" ]; then
+            printf 'Tag %s targets %s, but this run builds %s.\n' "${tag}" "${tag_sha}" "${GITHUB_SHA}"
+            exit 1
+          fi
+
+      - name: Inspect existing GitHub Release
+        id: release
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          tag="v${VERSION}"
+          repository_name="${GITHUB_REPOSITORY#*/}"
+          release_status="$(gh api graphql \
+            -f query='query($owner: String!, $name: String!, $tag: String!) {
+              repository(owner: $owner, name: $name) {
+                release(tagName: $tag) {
+                  isDraft
+                  isPrerelease
+                }
+              }
+            }' \
+            -f owner="${GITHUB_REPOSITORY_OWNER}" \
+            -f name="${repository_name}" \
+            -f tag="${tag}" \
+            --jq 'if .data.repository.release == null then "missing" elif .data.repository.release.isDraft or .data.repository.release.isPrerelease then "incomplete" else "published" end')"
+
+          if [ "${release_status}" = "incomplete" ]; then
+            printf 'GitHub Release %s exists but is a draft or prerelease.\n' "${tag}"
+            exit 1
+          fi
+          if [ "${release_status}" = "published" ]; then
+            printf 'published=true\n' >> "${GITHUB_OUTPUT}"
+          else
+            printf 'published=false\n' >> "${GITHUB_OUTPUT}"
+          fi
 
       - name: Check formatting
         run: pnpm format:check
@@ -111,3 +307,16 @@ jobs:
       - name: Report existing version
         if: steps.registry.outputs.published == 'true'
         run: echo "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }} is already published."
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && steps.release.outputs.published == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          tag="v${VERSION}"
+          gh release create "${tag}" \
+            --target "${GITHUB_SHA}" \
+            --title "${tag}" \
+            --generate-notes
