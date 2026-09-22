@@ -218,7 +218,7 @@ jobs:
           VERSION: ${{ steps.package.outputs.version }}
         run: |
           tag="v${VERSION}"
-          tag_reference="$(gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${tag}" --jq 'if length == 0 then "" else .[0].object.type + " " + .[0].object.sha end')"
+          tag_reference="$(gh api "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${tag}" --jq "map(select(.ref == \"refs/tags/${tag}\")) | if length == 0 then \"\" else .[0].object.type + \" \" + .[0].object.sha end")"
           if [ -z "${tag_reference}" ]; then
             exit 0
           fi
