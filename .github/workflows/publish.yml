@@ -15,8 +15,9 @@ permissions:
   id-token: write
 
 concurrency:
-  group: publish-${{ github.event.release.tag_name }}
+  group: ${{ github.workflow }}-publish
   cancel-in-progress: false
+  queue: max
 
 env:
   NODE_VERSION: 24.12.0
