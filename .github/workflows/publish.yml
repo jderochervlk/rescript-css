@@ -203,7 +203,6 @@ jobs:
         if: github.event_name == 'release'
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.package.outputs.version }}
         run: |
           expected_tag="v${VERSION}"
@@ -280,6 +279,7 @@ jobs:
         if: github.event_name == 'push'
         shell: bash
         env:
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.package.outputs.version }}
         run: |
           tag="v${VERSION}"
