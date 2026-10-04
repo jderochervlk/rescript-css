@@ -15,7 +15,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: publish-${{ github.event.release.tag_name || github.sha }}
+  group: publish
+  queue: max
   cancel-in-progress: false
 
 env:
