@@ -1,7 +1,7 @@
 # Releasing
 
-Releases are published from GitHub Releases. The release tag must exactly match the package version
-with a `v` prefix, such as `v0.1.0`.
+Stable releases are created and published automatically when a package-version change reaches
+`main`. The release tag exactly matches the package version with a `v` prefix, such as `v0.1.0`.
 
 ## First Publish
 
@@ -42,8 +42,10 @@ The command registers these values on npm:
 | Workflow filename    | `publish.yml`  |
 | Environment          | `npm`          |
 
-Create an `npm` environment in the GitHub repository. Required reviewers and tag deployment rules
-are recommended so a release cannot publish without an explicit approval.
+Create an `npm` environment in the GitHub repository. Required reviewers are recommended so a
+release cannot publish without an explicit approval. If deployment branch or tag restrictions are
+enabled, they must allow `main`: the workflow publishes from `main` and creates the release tag
+after publishing. A tag-only policy blocks the automatic release path.
 
 Once trusted publishing succeeds, configure npm to reject token-based package publishing. The
 workflow uses GitHub's short-lived OIDC identity and does not need an npm token or repository
@@ -52,10 +54,11 @@ secret.
 ## Later Releases
 
 1. Update `packages/rescript-css/package.json` to the version being released.
-2. Merge the version change and wait for CI to pass on `main`.
-3. Create a GitHub Release whose tag is `v` followed by that exact version.
-4. Approve the `npm` environment deployment when prompted.
-5. Confirm the new version and provenance information on npm.
+2. Merge the version change to `main`.
+3. Approve the `npm` environment deployment when prompted.
+4. Confirm the generated GitHub Release, new npm version, and provenance information.
 
-The publish workflow repeats formatting, type checks, tests, builds, and the packed-package smoke
-test before it contacts the registry. It only publishes stable GitHub Releases.
+The publish workflow detects whether the package version actually changed, then repeats formatting,
+type checks, tests, builds, and the packed-package smoke test before it contacts the registry. It
+creates the GitHub Release only after the package is available from npm. A manually published stable
+GitHub Release remains a supported way to retry a publication.
